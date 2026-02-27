@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String baseUrl = 'http://localhost:3000/auth';
+  static const String baseUrl = 'https://expense-tracker-ud5x.onrender.com/auth';
 
 
 
