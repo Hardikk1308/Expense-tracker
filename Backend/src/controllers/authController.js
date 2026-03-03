@@ -47,41 +47,38 @@ const login = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ message: 'Email and password required' });
-        }
-
-        const result = await pool.query(
-            'SELECT * FROM users WHERE email = $1',
+        const user = await pool.query(
+            "SELECT * FROM users WHERE email = $1",
             [email]
         );
 
-        if (result.rows.length === 0) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        if (user.rows.length === 0) {
+            return res.status(400).json({ message: "Invalid email or password" });
         }
 
-        const user = result.rows[0];
+        const validPassword = await bcrypt.compare(
+            password,
+            user.rows[0].password
+        );
 
-        const isValid = await bcrypt.compare(password, user.password);
-
-        if (!isValid) {
-            return res.status(400).json({ message: 'Invalid credentials' });
+        if (!validPassword) {
+            return res.status(400).json({ message: "Invalid email or password" });
         }
-        console.log("Generating token with payload:", { id: user.rows[0].id });
+
         const token = jwt.sign(
-            { id: user.rows[0].id },
+            { id: user.rows[0].id },  // ✅ correct payload
             process.env.JWT_SECRET,
             { expiresIn: "30d" }
         );
 
         res.json({
-            message: 'Login successful',
+            message: "Login successful",
             token,
         });
 
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Server error' });
+        console.error("Login Error:", error);
+        res.status(500).json({ message: "Server error" });
     }
 };
 
