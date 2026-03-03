@@ -4,7 +4,7 @@ const pool = require('../config/database');
 const addExpense = async (req, res) => {
   try {
     const { amount, category, description, expense_date } = req.body;
-    req.userId = decoded;
+    const userId = req.user.id;
 
     if (!amount || !category) {
       return res.status(400).json({
@@ -40,7 +40,7 @@ const addExpense = async (req, res) => {
 // ================= GET EXPENSES =================
 const getExpenses = async (req, res) => {
   try {
-    req.userId = decoded;
+    const userId = req.user.id;
 
     const result = await pool.query(
       "SELECT * FROM expenses WHERE user_id = $1 ORDER BY expense_date DESC",
@@ -59,7 +59,7 @@ const getExpenses = async (req, res) => {
 const deleteExpense = async (req, res) => {
   try {
     const { id } = req.params;
-    req.userId = decoded;
+    const userId = req.user.id;
 
     const result = await pool.query(
       "DELETE FROM expenses WHERE id = $1 AND user_id = $2 RETURNING *",
