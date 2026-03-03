@@ -1,37 +1,40 @@
-const bcrypt = require('bcrypt');
 const pool = require('../config/database');
 
 // ================= ADD EXPENSE =================
 const addExpense = async (req, res) => {
-    try {
-        const { amount, category, description, expense_date } = req.body;
+  try {
+    const { amount, category, description, expense_date } = req.body;
+    const userId = req.user.id;
 
-        const userId = req.user.id; // comes from auth middleware
-
-        // Validation
-        if (!amount || !category) {
-            return res.status(400).json({
-                message: "Amount and category are required",
-            });
-        }
-
-        const result = await pool.query(
-            `INSERT INTO expenses 
-       (user_id, amount, category, description, expense_date) 
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING *`,
-            [userId, amount, category, description || null, expense_date || new Date()]
-        );
-
-        res.status(201).json({
-            message: "Expense added successfully",
-            expense: result.rows[0],
-        });
-
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
+    if (!amount || !category) {
+      return res.status(400).json({
+        message: "Amount and category are required",
+      });
     }
+
+    const result = await pool.query(
+      `INSERT INTO expenses 
+      (user_id, amount, category, description, expense_date) 
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *`,
+      [
+        userId,
+        parseFloat(amount),
+        category,
+        description || null,
+        expense_date ? new Date(expense_date) : new Date()
+      ]
+    );
+
+    res.status(201).json({
+      message: "Expense added successfully",
+      expense: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("Add Expense Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 // ================= GET EXPENSES =================
@@ -44,15 +47,15 @@ const getExpenses = async (req, res) => {
       [userId]
     );
 
-    res.json(result.rows);
+    res.status(200).json(result.rows);
 
   } catch (error) {
-    console.error(error);
+    console.error("Get Expenses Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// ========================DELETE=======================
+// ================= DELETE EXPENSE =================
 const deleteExpense = async (req, res) => {
   try {
     const { id } = req.params;
@@ -67,10 +70,16 @@ const deleteExpense = async (req, res) => {
       return res.status(404).json({ message: "Expense not found" });
     }
 
-    res.json({ message: "Expense deleted" });
+    res.status(200).json({ message: "Expense deleted successfully" });
 
   } catch (error) {
-    console.error(error);
+    console.error("Delete Expense Error:", error);
     res.status(500).json({ message: "Server error" });
   }
+};
+
+module.exports = {
+  addExpense,
+  getExpenses,
+  deleteExpense
 };
