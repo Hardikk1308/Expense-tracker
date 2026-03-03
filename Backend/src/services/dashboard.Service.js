@@ -9,7 +9,7 @@ exports.getDashboardData = async (userId) => {
       SELECT COALESCE(SUM(amount), 0) AS total
       FROM expenses
       WHERE user_id = $1
-        AND DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE)
+      AND DATE_TRUNC('month', expense_date) = DATE_TRUNC('month', CURRENT_DATE);
     `;
 
     // 2️⃣ Get monthly budget
