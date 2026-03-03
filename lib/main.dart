@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'constants/app_theme.dart';
+import 'pages/splash_screen.dart';
 import 'pages/auth/login.dart';
 import 'pages/auth/Signup.dart';
+import 'pages/main_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,14 +17,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Expense Tracker',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      initialRoute: '/login',
+      theme: AppTheme.lightTheme,
+      initialRoute: '/',
       routes: {
+        '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignupPage(),
+        '/home': (context) => const MainPage(),
       },
     );
   }

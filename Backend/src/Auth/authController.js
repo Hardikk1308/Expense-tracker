@@ -23,7 +23,7 @@ const register = async (req, res) => {
         }
 
         // Hash password
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword = await bcrypt.hash(String(password), 10);
 
         // Insert user
         const result = await pool.query(

@@ -35,8 +35,8 @@ class _LoginPageState extends State<LoginPage> {
 
     if (result['success']) {
       _showMessage('Login successful!');
-      // TODO: Navigate to home page or save token
-      // You can save the token: result['token']
+      // Navigate to home page
+      Navigator.pushReplacementNamed(context, '/home');
     } else {
       _showMessage(result['message']);
     }
