@@ -21,7 +21,7 @@ exports.getDashboardData = async (userId) => {
 
     // 3️⃣ Recent transactions
     const recentQuery = `
-      SELECT id, amount, category, description, transaction_date
+      SELECT id, amount, category, description, expense_date
       FROM expenses
       WHERE user_id = $1
       ORDER BY expense_date DESC
