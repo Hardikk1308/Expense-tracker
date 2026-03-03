@@ -24,7 +24,7 @@ exports.getDashboardData = async (userId) => {
       SELECT id, amount, category, description, transaction_date
       FROM expenses
       WHERE user_id = $1
-      ORDER BY transaction_date DESC
+      ORDER BY expense_date DESC
       LIMIT 5
     `;
 
