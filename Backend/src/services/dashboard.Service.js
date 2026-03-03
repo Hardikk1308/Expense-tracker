@@ -9,7 +9,6 @@ exports.getDashboardData = async (userId) => {
       SELECT COALESCE(SUM(amount), 0) AS total
       FROM expenses
       WHERE user_id = $1
-        AND type = 'expense'
         AND DATE_TRUNC('month', transaction_date) = DATE_TRUNC('month', CURRENT_DATE)
     `;
 
