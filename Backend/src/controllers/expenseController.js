@@ -81,8 +81,55 @@ const deleteExpense = async (req, res) => {
   }
 };
 
+//================== UPDATE EXPENSE =================
+const updateExpense = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ✅ Add validation HERE
+    if (isNaN(id)) {
+      return res.status(400).json({ message: "Invalid expense id" });
+    }
+
+    const { amount, category, description, expense_date } = req.body;
+    const userId = req.user.id;
+
+    const result = await pool.query(
+      `UPDATE expenses SET 
+        amount = COALESCE($1, amount),
+        category = COALESCE($2, category),
+        description = COALESCE($3, description),
+        expense_date = COALESCE($4, expense_date)
+      WHERE id = $5 AND user_id = $6
+      RETURNING *`,
+      [
+        amount !== undefined ? amount : null,
+        category !== undefined ? category : null,
+        description !== undefined ? description : null,
+        expense_date !== undefined ? new Date(expense_date) : null,
+        id,
+        userId
+      ]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Expense not found or unauthorized" });
+    }
+
+    res.status(200).json({
+      message: "Expense updated successfully",
+      expense: result.rows[0],
+    });
+
+  } catch (error) {
+    console.error("Update Expense Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 module.exports = {
   addExpense,
   getExpenses,
-  deleteExpense
+  deleteExpense,
+  updateExpense,
 };
