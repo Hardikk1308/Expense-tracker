@@ -14,6 +14,10 @@ app.use(express.json());
 // Auth routes
 app.use('/auth', authRoutes);
 
+// Add expense routes
+const expenseRoutes = require('./src/routes/expenseRoutes');
+app.use('/api', expenseRoutes);
+
 app.listen(port,"0.0.0.0", () => {
     console.log(`Server is running on port ${port}`);
 });
