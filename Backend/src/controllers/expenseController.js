@@ -6,6 +6,9 @@ const addExpense = async (req, res) => {
     const { amount, category, description, expense_date } = req.body;
     const userId = req.user.id;
 
+    console.log("Decoded user:", req.user);
+    console.log("User ID:", req.user?.id);
+
     if (!amount || !category) {
       return res.status(400).json({
         message: "Amount and category are required",
