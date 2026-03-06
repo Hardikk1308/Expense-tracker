@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import '../constants/constants.dart';
+import '../services/expense_service.dart';
+import '../services/token_manager.dart';
 
 class AddExpensePage extends StatefulWidget {
   const AddExpensePage({super.key});
@@ -8,21 +11,86 @@ class AddExpensePage extends StatefulWidget {
 }
 
 class _AddExpensePageState extends State<AddExpensePage> {
-  final _amountController = TextEditingController(text: '45.80');
-  final _descriptionController = TextEditingController(text: 'Whole Foods Market');
-  final _notesController = TextEditingController(text: 'Weekly grocery shopping...');
+  final _amountController = TextEditingController();
+  final _descriptionController = TextEditingController();
+  final _notesController = TextEditingController();
   
   String selectedCategory = 'Food & Dining';
   String selectedPayment = 'Credit Card';
   DateTime selectedDate = DateTime.now();
+  bool _isLoading = false;
+
+  Future<void> _handleAddExpense() async {
+    if (_amountController.text.isEmpty || _descriptionController.text.isEmpty) {
+      _showMessage('Please fill in amount and description');
+      return;
+    }
+
+    final amount = double.tryParse(_amountController.text);
+    if (amount == null || amount <= 0) {
+      _showMessage('Please enter a valid amount');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    final result = await ExpenseService.addExpense(
+      amount: amount,
+      category: selectedCategory,
+      description: _descriptionController.text.trim(),
+      expenseDate: selectedDate,
+    );
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    if (result['success']) {
+      _showMessage('Expense added successfully!', isSuccess: true);
+      // Clear form
+      _amountController.clear();
+      _descriptionController.clear();
+      _notesController.clear();
+      setState(() {
+        selectedCategory = 'Food & Dining';
+        selectedDate = DateTime.now();
+      });
+      // Navigate back or refresh dashboard
+      Navigator.pop(context, true); // Return true to indicate success
+    } else {
+      // Check if login is required
+      if (result['requiresLogin'] == true) {
+        await TokenManager.clearAll();
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+        return;
+      }
+      
+      _showMessage(result['message']);
+    }
+  }
+
+  void _showMessage(String message, {bool isSuccess = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isSuccess ? AppColors.success : AppColors.error,
+      ),
+    );
+  }
 
   final List<Map<String, dynamic>> categories = [
     {'name': 'Food & Dining', 'icon': Icons.restaurant, 'color': Colors.purple},
     {'name': 'Transportation', 'icon': Icons.directions_car, 'color': Colors.red},
+    {'name': 'Trip', 'icon': Icons.flight, 'color': Colors.blue},
     {'name': 'Bills & Utilities', 'icon': Icons.flash_on, 'color': Colors.orange},
     {'name': 'Shopping', 'icon': Icons.shopping_bag, 'color': Colors.blue},
     {'name': 'Healthcare', 'icon': Icons.local_hospital, 'color': Colors.pink},
     {'name': 'Entertainment', 'icon': Icons.movie, 'color': Colors.indigo},
+    {'name': 'Coffee & Drinks', 'icon': Icons.local_cafe, 'color': Colors.brown},
   ];
 
   @override
@@ -409,30 +477,31 @@ class _AddExpensePageState extends State<AddExpensePage> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement add expense logic
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Expense added successfully!'),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                },
+                onPressed: _isLoading ? null : _handleAddExpense,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.deepPurple,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: AppColors.textOnPrimary,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Add Expense',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: _isLoading
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: AppColors.textOnPrimary,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Add Expense',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
             

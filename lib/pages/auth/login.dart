@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../utils/debug_utils.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -15,7 +16,12 @@ class _LoginPageState extends State<LoginPage> {
   bool _isLoading = false;
 
   Future<void> _handleLogin() async {
+    print('🔐 LOGIN: Starting login process');
+    print('📧 LOGIN: Email: ${_emailController.text.trim()}');
+    print('🔑 LOGIN: Password length: ${_passwordController.text.length}');
+
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      print('❌ LOGIN: Empty fields detected');
       _showMessage('Please fill in all fields');
       return;
     }
@@ -24,20 +30,25 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
 
+    print('🚀 LOGIN: Calling AuthService.login...');
     final result = await AuthService.login(
       _emailController.text.trim(),
       _passwordController.text,
     );
+
+    print('📥 LOGIN: AuthService response: $result');
 
     setState(() {
       _isLoading = false;
     });
 
     if (result['success']) {
+      print('✅ LOGIN: Login successful, navigating to home');
       _showMessage('Login successful!');
       // Navigate to home page
       Navigator.pushReplacementNamed(context, '/home');
     } else {
+      print('❌ LOGIN: Login failed: ${result['message']}');
       _showMessage(result['message']);
     }
   }
@@ -46,7 +57,9 @@ class _LoginPageState extends State<LoginPage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: message.contains('successful') ? Colors.green : Colors.red,
+        backgroundColor: message.contains('successful')
+            ? Colors.green
+            : Colors.red,
       ),
     );
   }
@@ -62,7 +75,7 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 60),
-              
+
               // Welcome back text
               const Text(
                 'Welcome back!',
@@ -75,14 +88,11 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 8),
               const Text(
                 'Sign in to your account',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.grey,
-                ),
+                style: TextStyle(fontSize: 16, color: Colors.grey),
               ),
-              
+
               const SizedBox(height: 60),
-              
+
               // Email field
               TextField(
                 controller: _emailController,
@@ -103,9 +113,9 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Password field
               TextField(
                 controller: _passwordController,
@@ -115,7 +125,9 @@ class _LoginPageState extends State<LoginPage> {
                   hintText: 'Enter your password',
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                      _isPasswordVisible
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                       color: Colors.grey,
                     ),
                     onPressed: () {
@@ -138,9 +150,43 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              
-              const SizedBox(height: 40),
-              
+
+              // const SizedBox(height: 40),
+
+              // // Debug test button
+              // SizedBox(
+              //   width: double.infinity,
+              //   height: 40,
+              //   child: OutlinedButton(
+              //     onPressed: () {
+              //       _emailController.text = 'test@example.com';
+              //       _passwordController.text = 'password123';
+              //       print('🧪 DEBUG: Test credentials filled');
+              //     },
+              //     child: const Text('Fill Test Credentials'),
+              //   ),
+              // ),
+
+              // const SizedBox(height: 20),
+
+              // // Debug Test Button (remove in production)
+              // SizedBox(
+              //   width: double.infinity,
+              //   height: 40,
+              //   child: OutlinedButton(
+              //     onPressed: () async {
+              //       print('🧪 DEBUG: Testing API connectivity...');
+              //       await DebugUtils.testApiConnectivity();
+              //       if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
+              //         await DebugUtils.testLoginEndpoint(_emailController.text.trim(), _passwordController.text);
+              //       }
+              //     },
+              //     child: const Text('🧪 Test API Connection'),
+              //   ),
+              // ),
+
+              const SizedBox(height: 20),
+
               // Login button
               SizedBox(
                 width: double.infinity,
@@ -173,9 +219,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                 ),
               ),
-              
+
               const Spacer(),
-              
+
               // Sign up link
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -198,7 +244,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 20),
             ],
           ),

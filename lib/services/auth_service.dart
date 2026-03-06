@@ -3,27 +3,47 @@ import 'package:http/http.dart' as http;
 import 'token_manager.dart';
 
 class AuthService {
-  static const String baseUrl = 'https://expense-tracker-3-gywh.onrender.com/auth';
+  static const String baseUrl = 'https://expense-tracker-3-gywh.onrender.com';
 
   //============================LOGIN=============================
   static Future<Map<String, dynamic>> login(String email, String password) async {
+    print('🔐 AuthService.login() called');
+    print('📧 Email: $email');
+    print('🔗 URL: $baseUrl/api/auth/login');
+    
     try {
+      final requestBody = {
+        'email': email,
+        'password': password,
+      };
+      
+      print('📤 Request body: $requestBody');
+      
       final response = await http.post(
-        Uri.parse('$baseUrl/login'),
+        Uri.parse('$baseUrl/api/auth/login'),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: jsonEncode({
-          'email': email,
-          'password': password,
-        }),
+        body: jsonEncode(requestBody),
       );
 
+      print('📥 Response status: ${response.statusCode}');
+      print('📥 Response body: ${response.body}');
+
       final data = jsonDecode(response.body);
+      print('📊 Parsed data: $data');
       
       if (response.statusCode == 200) {
+        print('✅ Login successful');
+        
         // Save token and user data
-        await TokenManager.saveToken(data['token']);
+        if (data['token'] != null) {
+          print('💾 Saving token: ${data['token'].substring(0, 20)}...');
+          await TokenManager.saveToken(data['token']);
+          print('✅ Token saved successfully');
+        } else {
+          print('❌ No token in response');
+        }
         
         return {
           'success': true,
@@ -31,12 +51,14 @@ class AuthService {
           'token': data['token'],
         };
       } else {
+        print('❌ Login failed with status: ${response.statusCode}');
         return {
           'success': false,
           'message': data['message'] ?? 'Login failed',
         };
       }
     } catch (e) {
+      print('💥 Login error: $e');
       return {
         'success': false,
         'message': 'Network error: ${e.toString()}',
@@ -48,7 +70,7 @@ class AuthService {
   static Future<Map<String, dynamic>> register(String username, String email, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/register'),
+        Uri.parse('$baseUrl/api/auth/register'),
         headers: {
           'Content-Type': 'application/json',
         },
@@ -95,7 +117,7 @@ class AuthService {
     try {
       final headers = await TokenManager.getAuthHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/user'),
+        Uri.parse('$baseUrl/api/auth/userinfo'),
         headers: headers,
       );
 

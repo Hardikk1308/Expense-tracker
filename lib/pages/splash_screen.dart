@@ -17,15 +17,20 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkLoginStatus() async {
+    print('🚀 SplashScreen: Checking login status...');
+    
     // Add a small delay for splash effect
     await Future.delayed(const Duration(seconds: 2));
     
     final isLoggedIn = await TokenManager.isLoggedIn();
+    print('🔐 SplashScreen: Login status: $isLoggedIn');
     
     if (mounted) {
       if (isLoggedIn) {
+        print('✅ SplashScreen: User is logged in, navigating to home');
         Navigator.pushReplacementNamed(context, '/home');
       } else {
+        print('❌ SplashScreen: User not logged in, navigating to login');
         Navigator.pushReplacementNamed(context, '/login');
       }
     }
