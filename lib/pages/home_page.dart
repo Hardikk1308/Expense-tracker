@@ -371,44 +371,6 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-  Widget _buildCategoryItem(
-    String name,
-    String amount,
-    String percentage,
-    Color color,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 12),
-          Expanded(child: Text(name, style: AppTextStyles.bodyMedium)),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                amount,
-                style: AppTextStyles.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                percentage,
-                style: AppTextStyles.bodySmall.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildTransactionItemFromData(RecentTransaction transaction) {
     IconData icon;

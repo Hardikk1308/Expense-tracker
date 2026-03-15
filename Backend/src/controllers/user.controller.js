@@ -24,3 +24,15 @@ exports.updateBudget = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.updatePreferences = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Assuming you have 'preferences' JSON column in users table or similar
+    // This is a placeholder since preferences are currently hardcoded in frontend
+    res.json({ message: "Preferences update backend logic ready to be hooked up to DB" });
+  } catch (error) {
+    console.error("Preferences error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

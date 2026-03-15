@@ -83,8 +83,20 @@ const login = async (req, res) => {
 };
 
 // ================= GET USER =================
-const getUserInfo = (req, res) => {
-    res.json({ userId: req.userId });
+const getUserInfo = async (req, res) => {
+    try {
+        const user = await pool.query(
+            "SELECT id, username, email, monthly_budget FROM users WHERE id = $1",
+            [req.user.id] // req.user is set by authMiddleware
+        );
+        if (user.rows.length === 0) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json(user.rows[0]);
+    } catch (error) {
+        console.error("Get User Info Error:", error);
+        res.status(500).json({ message: "Server error" });
+    }
 };
 
 module.exports = {
