@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { updateBudget, updatePreferences } = require("../controllers/user.controller");
+const { updateBudget, updatePreferences } = require("../controllers/userController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
 router.put("/budget", authenticateToken, updateBudget);
