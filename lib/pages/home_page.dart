@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/constants.dart';
 import '../services/token_manager.dart';
 import '../services/dashboard_service.dart';
+import '../services/user_settings_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -76,6 +77,87 @@ class _HomePageState extends State<HomePage> {
     await _loadDashboardData();
   }
 
+  Future<void> _showAddBudgetDialog(BuildContext context) async {
+    final TextEditingController budgetController = TextEditingController();
+    if (dashboardData != null) {
+      budgetController.text = dashboardData!.budget.toStringAsFixed(0);
+    }
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        bool isSubmitting = false;
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Set Monthly Budget'),
+              content: TextField(
+                controller: budgetController,
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Budget Amount',
+                  prefixText: '\$ ',
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: isSubmitting
+                      ? null
+                      : () async {
+                          final amount = double.tryParse(budgetController.text);
+                          if (amount == null || amount < 0) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Enter a valid amount')),
+                            );
+                            return;
+                          }
+
+                          setDialogState(() {
+                            isSubmitting = true;
+                          });
+
+                          final result = await UserSettingsService.updateBudget(amount);
+
+                          setDialogState(() {
+                            isSubmitting = false;
+                          });
+
+                          if (result['success']) {
+                            if (mounted) {
+                              Navigator.pop(context);
+                              _refreshData();
+                            }
+                          } else {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(result['message'] ?? 'Failed to set budget'),
+                                  backgroundColor: AppColors.error,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                  child: isSubmitting
+                      ? const SizedBox(
+                          height: 16,
+                          width: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -117,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // Navigate to add expense (will be handled by bottom nav)
+                        _showAddBudgetDialog(context);
                       },
                       child: Container(
                         width: 48,

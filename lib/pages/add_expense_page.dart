@@ -4,7 +4,8 @@ import '../services/expense_service.dart';
 import '../services/token_manager.dart';
 
 class AddExpensePage extends StatefulWidget {
-  const AddExpensePage({super.key});
+  final VoidCallback? onFinished;
+  const AddExpensePage({super.key, this.onFinished});
 
   @override
   State<AddExpensePage> createState() => _AddExpensePageState();
@@ -14,7 +15,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
   final _amountController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _notesController = TextEditingController();
-  
+
   String selectedCategory = 'Food & Dining';
   String selectedPayment = 'Credit Card';
   DateTime selectedDate = DateTime.now();
@@ -58,7 +59,11 @@ class _AddExpensePageState extends State<AddExpensePage> {
         selectedDate = DateTime.now();
       });
       // Navigate back or refresh dashboard
-      Navigator.pop(context, true); // Return true to indicate success
+      if (widget.onFinished != null) {
+        widget.onFinished!();
+      } else {
+        Navigator.pop(context, true); // Return true to indicate success
+      }
     } else {
       // Check if login is required
       if (result['requiresLogin'] == true) {
@@ -68,7 +73,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
         }
         return;
       }
-      
+
       _showMessage(result['message']);
     }
   }
@@ -84,13 +89,25 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
   final List<Map<String, dynamic>> categories = [
     {'name': 'Food & Dining', 'icon': Icons.restaurant, 'color': Colors.purple},
-    {'name': 'Transportation', 'icon': Icons.directions_car, 'color': Colors.red},
+    {
+      'name': 'Transportation',
+      'icon': Icons.directions_car,
+      'color': Colors.red,
+    },
     {'name': 'Trip', 'icon': Icons.flight, 'color': Colors.blue},
-    {'name': 'Bills & Utilities', 'icon': Icons.flash_on, 'color': Colors.orange},
+    {
+      'name': 'Bills & Utilities',
+      'icon': Icons.flash_on,
+      'color': Colors.orange,
+    },
     {'name': 'Shopping', 'icon': Icons.shopping_bag, 'color': Colors.blue},
     {'name': 'Healthcare', 'icon': Icons.local_hospital, 'color': Colors.pink},
     {'name': 'Entertainment', 'icon': Icons.movie, 'color': Colors.indigo},
-    {'name': 'Coffee & Drinks', 'icon': Icons.local_cafe, 'color': Colors.brown},
+    {
+      'name': 'Coffee & Drinks',
+      'icon': Icons.local_cafe,
+      'color': Colors.brown,
+    },
   ];
 
   @override
@@ -104,7 +121,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            if (widget.onFinished != null) {
+              widget.onFinished!();
+            } else {
+              Navigator.pop(context);
+            }
+          },
         ),
       ),
       body: SingleChildScrollView(
@@ -142,19 +165,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   const SizedBox(height: 16),
                   const Text(
                     'Scan Receipt',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   const Text(
                     'Use AI to automatically extract expense details',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.grey,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.grey, fontSize: 14),
                   ),
                   const SizedBox(height: 16),
                   SizedBox(
@@ -176,16 +193,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Amount Field
             const Text(
               'Amount *',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             Container(
@@ -213,16 +227,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Description Field
             const Text(
               'Description *',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -245,9 +256,9 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 fillColor: Colors.white,
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // AI Suggestion
             Container(
               width: double.infinity,
@@ -262,11 +273,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 children: [
                   Row(
                     children: [
-                      Icon(
-                        Icons.auto_awesome,
-                        color: Colors.blue,
-                        size: 20,
-                      ),
+                      Icon(Icons.auto_awesome, color: Colors.blue, size: 20),
                       const SizedBox(width: 8),
                       const Text(
                         'AI Suggestion',
@@ -305,16 +312,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Category Selection
             const Text(
               'Category *',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             GridView.builder(
@@ -330,7 +334,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
               itemBuilder: (context, index) {
                 final category = categories[index];
                 final isSelected = selectedCategory == category['name'];
-                
+
                 return GestureDetector(
                   onTap: () {
                     setState(() {
@@ -340,10 +344,14 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isSelected ? Colors.deepPurple.withOpacity(0.1) : Colors.white,
+                      color: isSelected
+                          ? Colors.deepPurple.withOpacity(0.1)
+                          : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? Colors.deepPurple : Colors.grey.shade300,
+                        color: isSelected
+                            ? Colors.deepPurple
+                            : Colors.grey.shade300,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -351,7 +359,9 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       children: [
                         Icon(
                           category['icon'],
-                          color: isSelected ? Colors.deepPurple : category['color'],
+                          color: isSelected
+                              ? Colors.deepPurple
+                              : category['color'],
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -360,8 +370,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
                             category['name'],
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                              color: isSelected ? Colors.deepPurple : Colors.black,
+                              fontWeight: isSelected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                              color: isSelected
+                                  ? Colors.deepPurple
+                                  : Colors.black,
                             ),
                           ),
                         ),
@@ -371,9 +385,9 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 );
               },
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Date and Payment Row
             Row(
               children: [
@@ -425,7 +439,11 @@ class _AddExpensePageState extends State<AddExpensePage> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.credit_card, color: Colors.blue, size: 16),
+                            Icon(
+                              Icons.credit_card,
+                              color: Colors.blue,
+                              size: 16,
+                            ),
                             const SizedBox(width: 8),
                             const Text('Credit Card'),
                           ],
@@ -436,16 +454,13 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Notes Field
             const Text(
               'Notes (Optional)',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             TextField(
@@ -469,9 +484,9 @@ class _AddExpensePageState extends State<AddExpensePage> {
                 fillColor: Colors.white,
               ),
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Add Expense Button
             SizedBox(
               width: double.infinity,
@@ -504,7 +519,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                       ),
               ),
             ),
-            
+
             const SizedBox(height: 20),
           ],
         ),
