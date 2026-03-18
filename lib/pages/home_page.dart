@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
     });
 
     final result = await DashboardService.getDashboardData();
-    
+
     if (result['success']) {
       setState(() {
         dashboardData = DashboardData.fromJson(result['data']);
@@ -50,7 +50,7 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         isLoading = false;
       });
-      
+
       // Check if login is required
       if (result['requiresLogin'] == true) {
         // Clear any stored data and redirect to login
@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
         }
         return;
       }
-      
+
       // Show error message
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -93,10 +93,12 @@ class _HomePageState extends State<HomePage> {
               title: const Text('Set Monthly Budget'),
               content: TextField(
                 controller: budgetController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Budget Amount',
-                  prefixText: '\$ ',
+                  prefixText: '₹ ',
                 ),
               ),
               actions: [
@@ -111,7 +113,9 @@ class _HomePageState extends State<HomePage> {
                           final amount = double.tryParse(budgetController.text);
                           if (amount == null || amount < 0) {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Enter a valid amount')),
+                              const SnackBar(
+                                content: Text('Enter a valid amount'),
+                              ),
                             );
                             return;
                           }
@@ -120,7 +124,9 @@ class _HomePageState extends State<HomePage> {
                             isSubmitting = true;
                           });
 
-                          final result = await UserSettingsService.updateBudget(amount);
+                          final result = await UserSettingsService.updateBudget(
+                            amount,
+                          );
 
                           setDialogState(() {
                             isSubmitting = false;
@@ -135,7 +141,9 @@ class _HomePageState extends State<HomePage> {
                             if (mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(result['message'] ?? 'Failed to set budget'),
+                                  content: Text(
+                                    result['message'] ?? 'Failed to set budget',
+                                  ),
                                   backgroundColor: AppColors.error,
                                 ),
                               );
@@ -206,7 +214,9 @@ class _HomePageState extends State<HomePage> {
                         height: 48,
                         decoration: BoxDecoration(
                           color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
                         ),
                         child: const Icon(
                           Icons.add,
@@ -245,9 +255,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
       ),
       child: const Center(
-        child: CircularProgressIndicator(
-          color: AppColors.textOnPrimary,
-        ),
+        child: CircularProgressIndicator(color: AppColors.textOnPrimary),
       ),
     );
   }
@@ -263,21 +271,14 @@ class _HomePageState extends State<HomePage> {
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.error_outline,
-            color: AppColors.error,
-            size: 48,
-          ),
+          Icon(Icons.error_outline, color: AppColors.error, size: 48),
           const SizedBox(height: 16),
           Text(
             'Failed to load dashboard data',
             style: AppTextStyles.h6.copyWith(color: AppColors.error),
           ),
           const SizedBox(height: 8),
-          ElevatedButton(
-            onPressed: _refreshData,
-            child: const Text('Retry'),
-          ),
+          ElevatedButton(onPressed: _refreshData, child: const Text('Retry')),
         ],
       ),
     );
@@ -312,7 +313,7 @@ class _HomePageState extends State<HomePage> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
-                    '\$',
+                    '₹',
                     style: AppTextStyles.h4.copyWith(
                       color: AppColors.textOnPrimary,
                     ),
@@ -320,19 +321,19 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Text(
-              '\$${dashboardData!.totalExpense.toStringAsFixed(2)}',
+              '₹${dashboardData!.totalExpense.toStringAsFixed(2)}',
               style: AppTextStyles.amountLarge.copyWith(
                 color: AppColors.textOnPrimary,
                 fontSize: 36,
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -340,7 +341,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Budget: \$${dashboardData!.budget.toStringAsFixed(0)}',
+                      'Budget: ₹${dashboardData!.budget.toStringAsFixed(0)}',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textOnPrimary.withValues(alpha: 0.8),
                       ),
@@ -358,7 +359,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'Remaining: \$${dashboardData!.remaining.toStringAsFixed(0)}',
+                      'Remaining: ₹${dashboardData!.remaining.toStringAsFixed(0)}',
                       style: AppTextStyles.bodySmall.copyWith(
                         color: AppColors.textOnPrimary.withValues(alpha: 0.8),
                       ),
@@ -374,9 +375,9 @@ class _HomePageState extends State<HomePage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Progress Bar
             Container(
               height: 8,
@@ -386,7 +387,10 @@ class _HomePageState extends State<HomePage> {
               ),
               child: FractionallySizedBox(
                 alignment: Alignment.centerLeft,
-                widthFactor: (dashboardData!.usedPercentage / 100).clamp(0.0, 1.0),
+                widthFactor: (dashboardData!.usedPercentage / 100).clamp(
+                  0.0,
+                  1.0,
+                ),
                 child: Container(
                   decoration: BoxDecoration(
                     color: AppColors.textOnPrimary,
@@ -398,9 +402,9 @@ class _HomePageState extends State<HomePage> {
           ],
         ),
       ),
-      
+
       const SizedBox(height: 32),
-      
+
       // Recent Transactions with real data
       if (dashboardData!.recentTransactions.isNotEmpty) ...[
         Container(
@@ -423,10 +427,7 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    'Recent Transactions',
-                    style: AppTextStyles.h5,
-                  ),
+                  Text('Recent Transactions', style: AppTextStyles.h5),
                   TextButton(
                     onPressed: () {
                       // Navigate to all transactions
@@ -440,9 +441,9 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               ...dashboardData!.recentTransactions.map((transaction) {
                 return _buildTransactionItemFromData(transaction);
               }).toList(),
@@ -453,11 +454,10 @@ class _HomePageState extends State<HomePage> {
     ];
   }
 
-
   Widget _buildTransactionItemFromData(RecentTransaction transaction) {
     IconData icon;
     Color iconColor;
-    
+
     // Map categories to icons and colors
     switch (transaction.category.toLowerCase()) {
       case 'food':
@@ -526,8 +526,8 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  transaction.description?.isNotEmpty == true 
-                      ? transaction.description! 
+                  transaction.description?.isNotEmpty == true
+                      ? transaction.description!
                       : _getCategoryDisplayName(transaction.category),
                   style: AppTextStyles.bodyMedium.copyWith(
                     fontWeight: FontWeight.w600,
@@ -599,9 +599,14 @@ class _HomePageState extends State<HomePage> {
       case 'pets':
         return 'Pets';
       default:
-        return category.split(' ').map((word) => 
-            word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : word
-        ).join(' ');
+        return category
+            .split(' ')
+            .map(
+              (word) => word.isNotEmpty
+                  ? word[0].toUpperCase() + word.substring(1)
+                  : word,
+            )
+            .join(' ');
     }
   }
 }

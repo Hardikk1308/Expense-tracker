@@ -42,11 +42,11 @@ class Expense {
   }
 
   String get formattedAmount {
-    return '\$${amount.toStringAsFixed(2)}';
+    return '₹${amount.toStringAsFixed(2)}';
   }
 
   String get formattedAmountWithSign {
-    return '-\$${amount.toStringAsFixed(2)}';
+    return '-₹${amount.toStringAsFixed(2)}';
   }
 
   String get formattedDate {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../constants/constants.dart';
 import '../services/expense_service.dart';
 import '../services/token_manager.dart';
+import '../services/category_service.dart';
 
 class AddExpensePage extends StatefulWidget {
   final VoidCallback? onFinished;
@@ -20,6 +21,58 @@ class _AddExpensePageState extends State<AddExpensePage> {
   String selectedPayment = 'Credit Card';
   DateTime selectedDate = DateTime.now();
   bool _isLoading = false;
+
+  List<Map<String, dynamic>> categories = [
+    {'name': 'Food & Dining', 'icon': Icons.restaurant, 'color': Colors.purple},
+    {
+      'name': 'Transportation',
+      'icon': Icons.directions_car,
+      'color': Colors.red,
+    },
+    {'name': 'Trip', 'icon': Icons.flight, 'color': Colors.blue},
+    {
+      'name': 'Bills & Utilities',
+      'icon': Icons.flash_on,
+      'color': Colors.orange,
+    },
+    {'name': 'Shopping', 'icon': Icons.shopping_bag, 'color': Colors.blue},
+    {'name': 'Healthcare', 'icon': Icons.local_hospital, 'color': Colors.pink},
+    {'name': 'Entertainment', 'icon': Icons.movie, 'color': Colors.indigo},
+    {
+      'name': 'Coffee & Drinks',
+      'icon': Icons.local_cafe,
+      'color': Colors.brown,
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCustomCategories();
+  }
+
+  Future<void> _loadCustomCategories() async {
+    final result = await CategoryService.getCategories();
+    if (result['success']) {
+      final List<CategoryModel> customCats = result['data'];
+      if (!mounted) return;
+
+      setState(() {
+        for (var c in customCats) {
+          // Avoid duplicate entries
+          if (!categories.any((cat) => cat['name'] == c.name)) {
+            categories.add({
+              'name': c.name,
+              'icon': Icons.label,
+              'color': c.color != null
+                  ? Color(c.color!).withAlpha(255)
+                  : Colors.deepPurple,
+            });
+          }
+        }
+      });
+    }
+  }
 
   Future<void> _handleAddExpense() async {
     if (_amountController.text.isEmpty || _descriptionController.text.isEmpty) {
@@ -86,29 +139,6 @@ class _AddExpensePageState extends State<AddExpensePage> {
       ),
     );
   }
-
-  final List<Map<String, dynamic>> categories = [
-    {'name': 'Food & Dining', 'icon': Icons.restaurant, 'color': Colors.purple},
-    {
-      'name': 'Transportation',
-      'icon': Icons.directions_car,
-      'color': Colors.red,
-    },
-    {'name': 'Trip', 'icon': Icons.flight, 'color': Colors.blue},
-    {
-      'name': 'Bills & Utilities',
-      'icon': Icons.flash_on,
-      'color': Colors.orange,
-    },
-    {'name': 'Shopping', 'icon': Icons.shopping_bag, 'color': Colors.blue},
-    {'name': 'Healthcare', 'icon': Icons.local_hospital, 'color': Colors.pink},
-    {'name': 'Entertainment', 'icon': Icons.movie, 'color': Colors.indigo},
-    {
-      'name': 'Coffee & Drinks',
-      'icon': Icons.local_cafe,
-      'color': Colors.brown,
-    },
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -216,7 +246,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
                   fontWeight: FontWeight.bold,
                 ),
                 decoration: const InputDecoration(
-                  prefixText: '\$ ',
+                  prefixText: '₹ ',
                   prefixStyle: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,

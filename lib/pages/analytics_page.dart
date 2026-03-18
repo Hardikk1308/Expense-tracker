@@ -192,7 +192,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           style: TextStyle(fontSize: 14),
                         ),
                         const Text(
-                          'You can spend \$653 more this month.',
+                          'You can spend ₹653 more this month.',
                           style: TextStyle(fontSize: 14),
                         ),
                       ],
@@ -274,10 +274,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                   
                   const SizedBox(height: 20),
                   
-                  _buildCategoryItem('Food', '\$1150', Colors.red, 0.8, 0.6),
-                  _buildCategoryItem('Transport', '\$680', Colors.blue, 0.6, 0.4),
-                  _buildCategoryItem('Bills', '\$520', Colors.green, 0.5, 0.3),
-                  _buildCategoryItem('Shopping', '\$350', Colors.orange, 0.3, 0.2),
+                  _buildCategoryItem('Food', '₹1150', Colors.red, 0.8, 0.6),
+                  _buildCategoryItem('Transport', '₹680', Colors.blue, 0.6, 0.4),
+                  _buildCategoryItem('Bills', '₹520', Colors.green, 0.5, 0.3),
+                  _buildCategoryItem('Shopping', '₹350', Colors.orange, 0.3, 0.2),
                 ],
               ),
             ),

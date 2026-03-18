@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../models/expense_model.dart';
+import '../services/expense_service.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -8,18 +10,87 @@ class SearchPage extends StatefulWidget {
 }
 
 class _SearchPageState extends State<SearchPage> {
-  final _searchController = TextEditingController(text: 'Show coffee expenses this month');
-  
-  List<String> selectedFilters = ['This Month', 'Food'];
-  
+  final _searchController = TextEditingController();
+  List<Expense> _allExpenses = [];
+  bool _isLoading = true;
+
+  List<String> selectedFilters = [];
+
   final List<String> naturalLanguageQueries = [
-    'Transport costs over \$50',
-    'All food purchases last week',
-    'Credit card expenses today',
+    'Transport costs',
+    'Food purchases',
+    'Credit card expenses',
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadExpenses();
+    _searchController.addListener(() {
+      setState(() {});
+    });
+  }
+
+  Future<void> _loadExpenses() async {
+    final result = await ExpenseService.getExpenses();
+    if (result['success']) {
+      setState(() {
+        _allExpenses = result['expenses'];
+        _isLoading = false;
+      });
+    } else {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<Expense> get _filteredExpenses {
+    var filtered = _allExpenses;
+
+    // Quick Filters
+    if (selectedFilters.contains('This Week')) {
+      final now = DateTime.now();
+      final weekAgo = now.subtract(const Duration(days: 7));
+      filtered = filtered.where((e) => e.expenseDate.isAfter(weekAgo)).toList();
+    }
+    if (selectedFilters.contains('This Month')) {
+      final now = DateTime.now();
+      filtered = filtered
+          .where(
+            (e) =>
+                e.expenseDate.month == now.month &&
+                e.expenseDate.year == now.year,
+          )
+          .toList();
+    }
+    if (selectedFilters.contains('Food')) {
+      filtered = filtered
+          .where((e) => e.category.toLowerCase().contains('food'))
+          .toList();
+    }
+    if (selectedFilters.contains('Over ₹20')) {
+      filtered = filtered.where((e) => e.amount > 20).toList();
+    }
+
+    // Text Search
+    final query = _searchController.text.toLowerCase();
+    if (query.isNotEmpty) {
+      filtered = filtered.where((e) {
+        final matchesDesc =
+            e.description?.toLowerCase().contains(query) ?? false;
+        final matchesCat = e.category.toLowerCase().contains(query);
+        return matchesDesc || matchesCat;
+      }).toList();
+    }
+
+    return filtered;
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final results = _filteredExpenses;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
@@ -27,12 +98,7 @@ class _SearchPageState extends State<SearchPage> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.tune),
-            onPressed: () {},
-          ),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.tune), onPressed: () {})],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -76,16 +142,16 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Natural Language Suggestions
             Row(
               children: [
                 Icon(Icons.auto_awesome, color: Colors.blue, size: 20),
                 const SizedBox(width: 8),
                 const Text(
-                  'Try natural language:',
+                  'Try searching for:',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -94,172 +160,133 @@ class _SearchPageState extends State<SearchPage> {
                 ),
               ],
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             Wrap(
               spacing: 8,
               runSpacing: 8,
               children: naturalLanguageQueries.map((query) {
-                return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
-                  ),
-                  child: Text(
-                    query,
-                    style: const TextStyle(
-                      color: Colors.blue,
-                      fontSize: 14,
+                return GestureDetector(
+                  onTap: () {
+                    _searchController.text = query.split(' ').first;
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                    ),
+                    child: Text(
+                      query,
+                      style: const TextStyle(color: Colors.blue, fontSize: 14),
                     ),
                   ),
                 );
               }).toList(),
             ),
-            
-            const SizedBox(height: 16),
-            
-            // AI Processing
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.blue,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'AI Processing...',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Quick Filters
             const Text(
               'Quick Filters',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
-                _buildFilterChip('This Week', false),
-                _buildFilterChip('This Month', true),
-                _buildFilterChip('Food', true),
-                _buildFilterChip('Over \$20', false),
+                _buildFilterChip('This Week'),
+                _buildFilterChip('This Month'),
+                _buildFilterChip('Food'),
+                _buildFilterChip('Over ₹20'),
               ],
             ),
-            
+
             const SizedBox(height: 32),
-            
+
             // Results
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  '8 Results',
-                  style: TextStyle(
+                Text(
+                  _isLoading ? 'Loading...' : '${results.length} Results',
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                Row(
-                  children: [
-                    const Text(
-                      'Filtered',
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 14,
+                if (selectedFilters.isNotEmpty ||
+                    _searchController.text.isNotEmpty)
+                  Row(
+                    children: [
+                      const Text(
+                        'Filtered',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(Icons.sort, color: Colors.grey, size: 20),
-                  ],
-                ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.sort, color: Colors.grey, size: 20),
+                    ],
+                  ),
               ],
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Search Results
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
+            if (_isLoading)
+              const Center(child: CircularProgressIndicator())
+            else if (results.isEmpty)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32.0),
+                  child: Text(
+                    'No expenses found',
+                    style: TextStyle(color: Colors.grey, fontSize: 16),
                   ),
-                ],
+                ),
+              )
+            else
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.1),
+                      spreadRadius: 1,
+                      blurRadius: 10,
+                    ),
+                  ],
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: results.length,
+                  separatorBuilder: (context, index) =>
+                      Divider(color: Colors.grey.shade200, height: 1),
+                  itemBuilder: (context, index) {
+                    final expense = results[index];
+                    return _buildSearchResultItem(expense);
+                  },
+                ),
               ),
-              child: Column(
-                children: [
-                  _buildSearchResultItem(
-                    icon: Icons.local_cafe,
-                    iconColor: Colors.brown,
-                    title: 'Starbucks Coffee',
-                    category: 'Food',
-                    paymentMethod: 'Credit Card',
-                    date: '2025-01-30',
-                    amount: '-\$12.5',
-                  ),
-                  Divider(color: Colors.grey.shade200, height: 1),
-                  _buildSearchResultItem(
-                    icon: Icons.restaurant,
-                    iconColor: Colors.orange,
-                    title: 'McDonald\'s',
-                    category: 'Food',
-                    paymentMethod: 'Cash',
-                    date: '2025-01-29',
-                    amount: '-\$8.99',
-                  ),
-                  Divider(color: Colors.grey.shade200, height: 1),
-                  _buildSearchResultItem(
-                    icon: Icons.local_pizza,
-                    iconColor: Colors.red,
-                    title: 'Pizza Hut',
-                    category: 'Food',
-                    paymentMethod: 'Credit Card',
-                    date: '2025-01-28',
-                    amount: '-\$24.50',
-                  ),
-                ],
-              ),
-            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildFilterChip(String label, bool isSelected) {
+  Widget _buildFilterChip(String label) {
+    bool isSelected = selectedFilters.contains(label);
     return FilterChip(
       label: Text(label),
       selected: isSelected,
@@ -284,15 +311,49 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  Widget _buildSearchResultItem({
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String category,
-    required String paymentMethod,
-    required String date,
-    required String amount,
-  }) {
+  Widget _buildSearchResultItem(Expense expense) {
+    IconData icon;
+    Color iconColor;
+
+    switch (expense.category.toLowerCase()) {
+      case 'food':
+      case 'food & dining':
+        icon = Icons.restaurant;
+        iconColor = Colors.orange;
+        break;
+      case 'transport':
+      case 'transportation':
+      case 'trip':
+        icon = Icons.directions_car;
+        iconColor = Colors.red;
+        break;
+      case 'bills':
+      case 'bills & utilities':
+        icon = Icons.receipt;
+        iconColor = Colors.blue;
+        break;
+      case 'shopping':
+        icon = Icons.shopping_bag;
+        iconColor = Colors.purple;
+        break;
+      case 'healthcare':
+        icon = Icons.local_hospital;
+        iconColor = Colors.pink;
+        break;
+      case 'entertainment':
+        icon = Icons.movie;
+        iconColor = Colors.indigo;
+        break;
+      case 'coffee':
+      case 'coffee & drinks':
+        icon = Icons.local_cafe;
+        iconColor = Colors.brown;
+        break;
+      default:
+        icon = Icons.label;
+        iconColor = Colors.deepPurple;
+    }
+
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Row(
@@ -303,11 +364,7 @@ class _SearchPageState extends State<SearchPage> {
               color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(
-              icon,
-              color: iconColor,
-              size: 20,
-            ),
+            child: Icon(icon, color: iconColor, size: 20),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -315,7 +372,7 @@ class _SearchPageState extends State<SearchPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  title,
+                  expense.displayTitle,
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -325,29 +382,20 @@ class _SearchPageState extends State<SearchPage> {
                 Row(
                   children: [
                     Text(
-                      category,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      expense.category,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(width: 8),
-                    Icon(Icons.credit_card, size: 12, color: Colors.grey),
+                    const Icon(Icons.credit_card, size: 12, color: Colors.grey),
                     const SizedBox(width: 4),
-                    Text(
-                      paymentMethod,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                    const Text(
+                      'Card/Cash',
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      date,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
+                      expense.formattedDate,
+                      style: const TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -355,11 +403,8 @@ class _SearchPageState extends State<SearchPage> {
             ),
           ),
           Text(
-            amount,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            expense.formattedAmountWithSign,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
         ],
       ),
