@@ -13,6 +13,17 @@ class AuthService {
       final token = result['data']['token'];
       if (token != null) {
         await TokenManager.saveToken(token);
+        
+        // Fetch and save user info
+        final userResult = await getUserInfo();
+        if (userResult['success']) {
+          final userData = userResult['data'];
+          await TokenManager.saveUserData(
+            userId: userData['id'].toString(),
+            username: userData['username'],
+            email: userData['email'],
+          );
+        }
       }
       return {
         'success': true,
