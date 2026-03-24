@@ -1,49 +1,9 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'token_manager.dart';
+import 'base_api_service.dart';
 
 class DashboardService {
-  static const String baseUrl = 'https://expense-tracker-3-gywh.onrender.com';
-  
   // Get Dashboard Data
   static Future<Map<String, dynamic>> getDashboardData() async {
-    try {
-      final headers = await TokenManager.getAuthHeaders();
-      final response = await http.get(
-        Uri.parse('$baseUrl/dashboard'),
-        headers: headers,
-      );
-      
-      print('📥 Dashboard response status: ${response.statusCode}');
-      print('📄 Dashboard response body: ${response.body}');
-      
-      if (response.statusCode == 401 || response.statusCode == 403) {
-        return {
-          'success': false,
-          'message': 'Session expired. Please login again.',
-          'requiresLogin': true,
-        };
-      }
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return {
-          'success': true,
-          'data': data,
-        };
-      } else {
-        final data = jsonDecode(response.body);
-        return {
-          'success': false,
-          'message': data['message'] ?? 'Failed to load dashboard data',
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'message': 'Network error: ${e.toString()}',
-      };
-    }
+    return await BaseApiService.get('/dashboard');
   }
 }
 

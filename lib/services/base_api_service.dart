@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'token_manager.dart';
 
+import '../core/api_config.dart';
+
 class BaseApiService {
-  static const String baseUrl = 'https://expense-tracker-3-gywh.onrender.com';
+  static const String baseUrl = ApiConfig.baseUrl;
   
   // Handle API response and check for authentication errors
   static Map<String, dynamic> handleResponse(http.Response response) {
@@ -42,7 +44,7 @@ class BaseApiService {
     try {
       final headers = await TokenManager.getAuthHeaders();
       final response = await http.get(
-        Uri.parse('$baseUrl/api$endpoint'),
+        Uri.parse('$baseUrl$endpoint'),
         headers: headers,
       );
       
@@ -60,7 +62,7 @@ class BaseApiService {
     try {
       final headers = await TokenManager.getAuthHeaders();
       final response = await http.post(
-        Uri.parse('$baseUrl/api$endpoint'),
+        Uri.parse('$baseUrl$endpoint'),
         headers: headers,
         body: jsonEncode(body),
       );
@@ -79,7 +81,7 @@ class BaseApiService {
     try {
       final headers = await TokenManager.getAuthHeaders();
       final response = await http.put(
-        Uri.parse('$baseUrl/api$endpoint'),
+        Uri.parse('$baseUrl$endpoint'),
         headers: headers,
         body: jsonEncode(body),
       );
@@ -98,7 +100,7 @@ class BaseApiService {
     try {
       final headers = await TokenManager.getAuthHeaders();
       final response = await http.delete(
-        Uri.parse('$baseUrl/api$endpoint'),
+        Uri.parse('$baseUrl$endpoint'),
         headers: headers,
       );
       

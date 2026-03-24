@@ -2,13 +2,22 @@ import 'package:flutter/material.dart';
 import 'constants/app_theme.dart';
 import 'pages/splash_screen.dart';
 import 'pages/auth/login.dart';
-import 'pages/auth/Signup.dart';
+import 'pages/auth/signup.dart';
 import 'pages/main_page.dart';
 
+import 'package:provider/provider.dart';
+import 'provider/expense_provider.dart';
+
 void main() {
-  print('🚀 MAIN: Starting Expense Tracker app...');
-  print('🏗️ MAIN: Initializing Flutter app...');
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ExpenseProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {

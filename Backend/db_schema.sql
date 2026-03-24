@@ -22,3 +22,15 @@ CREATE TABLE IF NOT EXISTS expenses (
 
 -- Optional: Create an index to quickly filter expenses by user
 CREATE INDEX IF NOT EXISTS idx_expenses_user_id ON expenses(user_id);
+
+CREATE TABLE IF NOT EXISTS budgets (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+    category VARCHAR(100) NOT NULL,
+    amount NUMERIC(10, 2) NOT NULL,
+    month INTEGER NOT NULL,
+    year INTEGER NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, category, month, year)
+);

@@ -1,4 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../provider/expense_provider.dart';
+import '../constants/app_colors.dart';
+import '../widgets/category_breakdown_card.dart';
+import '../widgets/custom_card.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
@@ -8,544 +15,234 @@ class AnalyticsPage extends StatefulWidget {
 }
 
 class _AnalyticsPageState extends State<AnalyticsPage> {
-  String selectedPeriod = 'Month';
+  String _selectedTimeline = 'This Month';
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Analytics'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 16),
-            child: ToggleButtons(
-              isSelected: [selectedPeriod == 'Month', selectedPeriod == 'Year'],
-              onPressed: (index) {
-                setState(() {
-                  selectedPeriod = index == 0 ? 'Month' : 'Year';
-                });
-              },
-              borderRadius: BorderRadius.circular(8),
-              selectedColor: Colors.white,
-              fillColor: Colors.deepPurple,
-              color: Colors.grey,
-              constraints: const BoxConstraints(minWidth: 60, minHeight: 32),
-              children: const [
-                Text('Month'),
-                Text('Year'),
-              ],
-            ),
-          ),
-        ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // AI-Powered Insights
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.lightbulb, color: Colors.orange, size: 20),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'AI-Powered Insights',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  
-                  const SizedBox(height: 16),
-                  
-                  // High Spending Alert
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.warning, color: Colors.orange, size: 16),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'High Spending Alert',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.orange,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'You spent 25% more on food this week.',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        const Text(
-                          'Consider meal planning to reduce expenses.',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Great Progress
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.trending_up, color: Colors.green, size: 16),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Great Progress!',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.green,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'Transportation costs decreased by 15%.',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        const Text(
-                          'Keep using public transport.',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 12),
-                  
-                  // Budget Goal
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.purple.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.purple.withOpacity(0.3)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.analytics, color: Colors.purple, size: 16),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Budget Goal',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Colors.purple,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'You\'re 81% towards your monthly goal.',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        const Text(
-                          'You can spend ₹653 more this month.',
-                          style: TextStyle(fontSize: 14),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Monthly Spending Trend
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Monthly Spending Trend',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  // Simple chart representation
-                  Container(
-                    height: 200,
-                    child: CustomPaint(
-                      size: Size(double.infinity, 200),
-                      painter: SimpleChartPainter(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Category Breakdown
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.grey.withOpacity(0.1),
-                    spreadRadius: 1,
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Category Breakdown',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  
-                  const SizedBox(height: 20),
-                  
-                  _buildCategoryItem('Food', '₹1150', Colors.red, 0.8, 0.6),
-                  _buildCategoryItem('Transport', '₹680', Colors.blue, 0.6, 0.4),
-                  _buildCategoryItem('Bills', '₹520', Colors.green, 0.5, 0.3),
-                  _buildCategoryItem('Shopping', '₹350', Colors.orange, 0.3, 0.2),
-                ],
-              ),
-            ),
-            
-            const SizedBox(height: 24),
-            
-            // Best/Worst Categories
-            Row(
+      body: Consumer<ExpenseProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading && provider.expenses.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.expenses.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          final categoryTotals = _calculateCategoryTotals(provider.expenses);
+          final dailySpending = _calculateDailySpending(provider.expenses);
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.trending_down,
-                            color: Colors.green,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Best Category',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const Text(
-                          'Transport',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Text(
-                          '-15% saved',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.green,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(width: 16),
-                
-                Expanded(
-                  child: Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(
-                            Icons.trending_up,
-                            color: Colors.red,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'Needs Attention',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const Text(
-                          'Food',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const Text(
-                          '+25% over',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.red,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildSpendingHeader(provider.currentMonthBalance),
+                const SizedBox(height: 32),
+                _buildTimelineChart(dailySpending),
+                const SizedBox(height: 32),
+                CategoryBreakdownCard(categoryTotals: categoryTotals),
+                const SizedBox(height: 32),
+                _buildSpendingSummary(categoryTotals),
+                const SizedBox(height: 32),
               ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildSpendingHeader(double total) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Total Spending',
+          style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              '₹${total.toStringAsFixed(2)}',
+              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10),
+                ],
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.calendar_today, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 8),
+                  Text(
+                    _selectedTimeline,
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildCategoryItem(String name, String amount, Color color, double thisMonthProgress, double lastMonthProgress) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+  Widget _buildTimelineChart(List<FlSpot> spots) {
+    return CustomCard(
+      gradient: AppColors.surfaceGradient,
+      padding: const EdgeInsets.fromLTRB(16, 24, 24, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                name,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                amount,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
+          const Text(
+            'Spending Trend',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: thisMonthProgress,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: color,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'This Month',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
+          const SizedBox(height: 32),
+          SizedBox(
+            height: 200,
+            child: LineChart(
+              LineChartData(
+                gridData: FlGridData(
+                  show: true,
+                  drawVerticalLine: false,
+                  getDrawingHorizontalLine: (value) => FlLine(
+                    color: Colors.grey.withOpacity(0.1),
+                    strokeWidth: 1,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade200,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: FractionallySizedBox(
-                        alignment: Alignment.centerLeft,
-                        widthFactor: lastMonthProgress,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Colors.grey.shade400,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                        ),
-                      ),
+                titlesData: const FlTitlesData(
+                  show: true,
+                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                  bottomTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                      showTitles: true,
+                      reservedSize: 30,
+                      interval: 5,
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Last Month',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
+                borderData: FlBorderData(show: false),
+                lineBarsData: [
+                  LineChartBarData(
+                    spots: spots,
+                    isCurved: true,
+                    color: AppColors.primary,
+                    barWidth: 4,
+                    dotData: const FlDotData(show: false),
+                    belowBarData: BarAreaData(
+                      show: true,
+                      color: AppColors.primary.withOpacity(0.1),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class SimpleChartPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.deepPurple
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
+  Widget _buildSpendingSummary(Map<String, double> categoryTotals) {
+    final highestCategory = categoryTotals.entries.reduce((a, b) => a.value > b.value ? a : b).key;
 
-    final path = Path();
-    
-    // Sample data points for the chart
-    final points = [
-      Offset(0, size.height * 0.8),
-      Offset(size.width * 0.2, size.height * 0.6),
-      Offset(size.width * 0.4, size.height * 0.7),
-      Offset(size.width * 0.6, size.height * 0.4),
-      Offset(size.width * 0.8, size.height * 0.3),
-      Offset(size.width, size.height * 0.5),
-    ];
-
-    path.moveTo(points[0].dx, points[0].dy);
-    for (int i = 1; i < points.length; i++) {
-      path.lineTo(points[i].dx, points[i].dy);
-    }
-
-    canvas.drawPath(path, paint);
-
-    // Draw points
-    final pointPaint = Paint()
-      ..color = Colors.deepPurple
-      ..style = PaintingStyle.fill;
-
-    for (final point in points) {
-      canvas.drawCircle(point, 4, pointPaint);
-    }
+    return CustomCard(
+      padding: const EdgeInsets.all(24),
+      gradient: AppColors.surfaceGradient,
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.orange.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(Icons.insights, color: Colors.orange, size: 28),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Main Spending',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  highestCategory,
+                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'This is your highest expense area this month.',
+                  style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.bar_chart_outlined, size: 64, color: AppColors.textTertiary),
+          const SizedBox(height: 16),
+          const Text(
+            'No statistics for the current month',
+            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Map<String, double> _calculateCategoryTotals(List providerExpenses) {
+    Map<String, double> totals = {};
+    for (var expense in providerExpenses) {
+      totals[expense.category] = (totals[expense.category] ?? 0) + expense.amount;
+    }
+    return totals;
+  }
+
+  List<FlSpot> _calculateDailySpending(List providerExpenses) {
+    Map<int, double> daily = {};
+    final now = DateTime.now();
+
+    for (var expense in providerExpenses) {
+      if (expense.expenseDate.month == now.month && expense.expenseDate.year == now.year) {
+        daily[expense.expenseDate.day] = (daily[expense.expenseDate.day] ?? 0) + expense.amount;
+      }
+    }
+
+    List<FlSpot> spots = [];
+    for (int day = 1; day <= 30; day++) {
+      spots.add(FlSpot(day.toDouble(), daily[day] ?? 0));
+    }
+    return spots;
+  }
 }

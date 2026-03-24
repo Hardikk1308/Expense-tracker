@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 class Expense {
   final int id;
   final double amount;
@@ -68,36 +70,63 @@ class Expense {
     return description?.isNotEmpty == true ? description! : category;
   }
 
-  // Category icon mapping
-  String get categoryIcon {
+  // Category icon mapping (returns IconData)
+  static IconData getIconData(String category) {
     switch (category.toLowerCase()) {
       case 'food':
       case 'food & dining':
-        return '🍽️';
+        return Icons.restaurant;
       case 'transport':
       case 'transportation':
       case 'trip':
-        return '🚗';
+        return Icons.directions_car;
       case 'bills':
       case 'bills & utilities':
-        return '📄';
+        return Icons.bolt;
       case 'shopping':
-        return '🛍️';
+        return Icons.shopping_bag;
       case 'healthcare':
-        return '🏥';
+        return Icons.local_hospital;
       case 'entertainment':
-        return '🎬';
+        return Icons.movie;
       case 'coffee':
       case 'coffee & drinks':
-        return '☕';
+        return Icons.local_cafe;
       case 'gym':
       case 'fitness':
-        return '💪';
+        return Icons.fitness_center;
       case 'pet':
       case 'pets':
-        return '🐕';
+        return Icons.pets;
       default:
-        return '💰';
+        return Icons.category;
+    }
+  }
+
+  // Category color mapping
+  static Color getColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'food':
+      case 'food & dining':
+        return const Color(0xFFF43F5E);
+      case 'transport':
+      case 'transportation':
+      case 'trip':
+        return const Color(0xFF8B5CF6);
+      case 'bills':
+      case 'bills & utilities':
+        return const Color(0xFF06B6D4);
+      case 'shopping':
+        return const Color(0xFFEC4899);
+      case 'healthcare':
+        return const Color(0xFF22C55E);
+      case 'entertainment':
+        return const Color(0xFFF97316);
+      case 'coffee':
+      case 'coffee & drinks':
+        return const Color(0xFFB45309);
+      default:
+        return const Color(0xFF64748B);
     }
   }
 

@@ -1,6 +1,4 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'token_manager.dart';
+import 'base_api_service.dart';
 
 class CategoryModel {
   final int id;
@@ -27,28 +25,16 @@ class CategoryModel {
 }
 
 class CategoryService {
-  static const String baseUrl = 'https://expense-tracker-3-gywh.onrender.com';
-
   static Future<Map<String, dynamic>> getCategories() async {
-    try {
-      final headers = await TokenManager.getAuthHeaders();
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/categories'),
-        headers: headers,
-      );
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        final List<dynamic> data = jsonDecode(response.body);
-        final categories = data
-            .map((json) => CategoryModel.fromJson(json))
-            .toList();
-        return {'success': true, 'data': categories};
-      } else {
-        return {'success': false, 'message': 'Failed to fetch categories'};
-      }
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    final result = await BaseApiService.get('/categories');
+    if (result['success']) {
+      final List<dynamic> data = result['data'];
+      final categories = data
+          .map((json) => CategoryModel.fromJson(json))
+          .toList();
+      return {'success': true, 'data': categories};
     }
+    return result;
   }
 
   static Future<Map<String, dynamic>> addCategory(
@@ -56,25 +42,18 @@ class CategoryService {
     String icon,
     int color,
   ) async {
-    try {
-      final headers = await TokenManager.getAuthHeaders();
-      final response = await http.post(
-        Uri.parse('$baseUrl/api/categories'),
-        headers: headers,
-        body: jsonEncode({'name': name, 'icon': icon, 'color': color}),
-      );
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return {
-          'success': true,
-          'data': CategoryModel.fromJson(jsonDecode(response.body)),
-        };
-      } else {
-        return {'success': false, 'message': 'Failed to add category'};
-      }
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    final result = await BaseApiService.post('/categories', {
+      'name': name,
+      'icon': icon,
+      'color': color,
+    });
+    if (result['success']) {
+      return {
+        'success': true,
+        'data': CategoryModel.fromJson(result['data']),
+      };
     }
+    return result;
   }
 
   static Future<Map<String, dynamic>> updateCategory(
@@ -83,42 +62,21 @@ class CategoryService {
     String icon,
     int color,
   ) async {
-    try {
-      final headers = await TokenManager.getAuthHeaders();
-      final response = await http.put(
-        Uri.parse('$baseUrl/api/categories/$id'),
-        headers: headers,
-        body: jsonEncode({'name': name, 'icon': icon, 'color': color}),
-      );
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return {
-          'success': true,
-          'data': CategoryModel.fromJson(jsonDecode(response.body)),
-        };
-      } else {
-        return {'success': false, 'message': 'Failed to update category'};
-      }
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: ${e.toString()}'};
+    final result = await BaseApiService.put('/categories/$id', {
+      'name': name,
+      'icon': icon,
+      'color': color,
+    });
+    if (result['success']) {
+      return {
+        'success': true,
+        'data': CategoryModel.fromJson(result['data']),
+      };
     }
+    return result;
   }
 
   static Future<Map<String, dynamic>> deleteCategory(int id) async {
-    try {
-      final headers = await TokenManager.getAuthHeaders();
-      final response = await http.delete(
-        Uri.parse('$baseUrl/api/categories/$id'),
-        headers: headers,
-      );
-
-      if (response.statusCode >= 200 && response.statusCode < 300) {
-        return {'success': true, 'message': 'Category deleted'};
-      } else {
-        return {'success': false, 'message': 'Failed to delete category'};
-      }
-    } catch (e) {
-      return {'success': false, 'message': 'Network error: ${e.toString()}'};
-    }
+    return await BaseApiService.delete('/categories/$id');
   }
 }

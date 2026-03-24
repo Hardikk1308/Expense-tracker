@@ -1,71 +1,67 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Primary Colors
-  static const Color primary = Color(0xFF673AB7); // Deep Purple
-  static const Color primaryLight = Color(0xFF9C27B0); // Purple
-  static const Color primaryDark = Color(0xFF512DA8); // Dark Purple
+  // Brand Colors - Slightly Darker & Premium
+  static const Color primary = Color(0xFF4F46E5); // Deeper Indigo
+  static const Color primaryLight = Color(0xFF6366F1);
+  static const Color primaryDark = Color(0xFF3730A3);
+  static const Color secondary = Color(0xFF1E293B); // Dark Slate
   
-  // Secondary Colors
-  static const Color secondary = Color(0xFF03DAC6); // Teal
-  static const Color secondaryLight = Color(0xFF66FFF9);
-  static const Color secondaryDark = Color(0xFF00A693);
+  // Neutral Colors - Premium Dark Mode / Slate
+  static const Color background = Color(0xFF0F172A); // Deep Navy/Slate Background
+  static const Color surface = Color(0xFF1E293B); // Slate Surface for Cards
+  static const Color textPrimary = Colors.white; // White for readability on dark
+  static const Color textSecondary = Color(0xFF94A3B8); // Muted Slate
+  static const Color textTertiary = Color(0xFF64748B);
+  static const Color textOnPrimary = Colors.white;
+  static const Color textHint = Color(0xFF475569);
   
-  // Background Colors
-  static const Color background = Color(0xFFFAFAFA); // Light Grey
-  static const Color surface = Color(0xFFFFFFFF); // White
-  static const Color cardBackground = Color(0xFFFFFFFF); // White
+  // Semantic Colors
+  static const Color success = Color(0xFF10B981);
+  static const Color warning = Color(0xFFF59E0B);
+  static const Color error = Color(0xFFEF4444);
+  static const Color info = Color(0xFF3B82F6);
   
-  // Text Colors
-  static const Color textPrimary = Color(0xFF212121); // Dark Grey
-  static const Color textSecondary = Color(0xFF757575); // Medium Grey
-  static const Color textHint = Color(0xFF9E9E9E); // Light Grey
-  static const Color textOnPrimary = Color(0xFFFFFFFF); // White
-  
-  // Status Colors
-  static const Color success = Color(0xFF4CAF50); // Green
-  static const Color warning = Color(0xFFFF9800); // Orange
-  static const Color error = Color(0xFFF44336); // Red
-  static const Color info = Color(0xFF2196F3); // Blue
-  
-  // Category Colors
-  static const Color foodColor = Color(0xFFE91E63); // Pink
-  static const Color transportColor = Color(0xFFF44336); // Red
-  static const Color billsColor = Color(0xFF4CAF50); // Green
-  static const Color shoppingColor = Color(0xFF2196F3); // Blue
-  static const Color healthcareColor = Color(0xFF9C27B0); // Purple
-  static const Color entertainmentColor = Color(0xFF3F51B5); // Indigo
-  static const Color coffeeColor = Color(0xFF795548); // Brown
-  static const Color gymColor = Color(0xFF8BC34A); // Light Green
-  static const Color petColor = Color(0xFF00BCD4); // Cyan
-  
-  // Gradient Colors
+  // UI Elements
+  static const Color borderLight = Color(0xFF334155);
+  static const Color borderMedium = Color(0xFF475569);
+  static const Color cardBackground = Color(0xFF1E293B);
+  static const Color shadowLight = Color(0x40000000);
+
+  // Category Colors (Vibrant but modern)
+  static const Color food = Color(0xFFF43F5E);
+  static const Color transport = Color(0xFF8B5CF6);
+  static const Color shopping = Color(0xFFEC4899);
+  static const Color entertainment = Color(0xFFF97316);
+  static const Color bills = Color(0xFF06B6D4);
+  static const Color health = Color(0xFF22C55E);
+  static const Color coffee = Color(0xFFB45309);
+  static const Color others = Color(0xFF94A3B8);
+
+  // Premium Gradients for Cards
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primary, primaryLight],
+    colors: [Color(0xFF6366F1), Color(0xFF4F46E5)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
   
-  static const LinearGradient cardGradient = LinearGradient(
-    colors: [Color(0xFFFFFFFF), Color(0xFFF8F9FA)],
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
+  static const LinearGradient surfaceGradient = LinearGradient(
+    colors: [Color(0xFF1E293B), Color(0xFF0F172A)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
   );
-  
-  // Border Colors
-  static const Color borderLight = Color(0xFFE0E0E0);
-  static const Color borderMedium = Color(0xFFBDBDBD);
-  static const Color borderDark = Color(0xFF9E9E9E);
-  
-  // Shadow Colors
-  static Color shadowLight = Colors.black.withValues(alpha: 0.05);
-  static Color shadowMedium = Colors.black.withValues(alpha: 0.1);
-  static Color shadowDark = Colors.black.withValues(alpha: 0.15);
-  
-  // Opacity Colors
-  static Color primaryWithOpacity(double opacity) => primary.withValues(alpha: opacity);
-  static Color successWithOpacity(double opacity) => success.withValues(alpha: opacity);
-  static Color warningWithOpacity(double opacity) => warning.withValues(alpha: opacity);
-  static Color errorWithOpacity(double opacity) => error.withValues(alpha: opacity);
-  static Color infoWithOpacity(double opacity) => info.withValues(alpha: opacity);
+
+  static const LinearGradient accentGradient = LinearGradient(
+    colors: [Color(0xFFF43F5E), Color(0xFFE11D48)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static LinearGradient successGradient = LinearGradient(
+    colors: [success, success.withOpacity(0.8)],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static Color primaryWithOpacity(double opacity) => primary.withOpacity(opacity);
 }
