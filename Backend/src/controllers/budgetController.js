@@ -1,82 +1,72 @@
 const pool = require('../config/database');
 
-// Gets budget for the current month or specified month/year
-exports.getBudgets = async (req, res) => {
+// Get budget for the current month
+const getBudget = async (req, res) => {
   try {
     const userId = req.user.id;
     const { month, year } = req.query;
-    const currentMonth = month || new Date().getMonth() + 1;
-    const currentYear = year || new Date().getFullYear();
 
-    const result = await pool.query(
-      `SELECT * FROM budgets WHERE user_id = $1 AND month = $2 AND year = $3`,
-      [userId, currentMonth, currentYear]
+    if (!month || !year) {
+      return res.status(400).json({ message: "Month and year required" });
+    }
+
+    // Get the limit
+    const budgetResult = await pool.query(
+      "SELECT * FROM budgets WHERE user_id = $1 AND month = $2 AND year = $3",
+      [userId, month, year]
     );
 
-    res.status(200).json(result.rows);
+    let budget = budgetResult.rows[0];
+
+    // If no budget entry, create a default one or return zero limit
+    if (!budget) {
+      return res.status(200).json({
+        monthly_limit: 0,
+        current_spent: 0,
+        month: parseInt(month),
+        year: parseInt(year)
+      });
+    }
+
+    // Calculate total spent for that month
+    const expenseResult = await pool.query(
+      "SELECT SUM(amount) as total FROM expenses WHERE user_id = $1 AND EXTRACT(MONTH FROM expense_date) = $2 AND EXTRACT(YEAR FROM expense_date) = $3",
+      [userId, month, year]
+    );
+
+    budget.current_spent = parseFloat(expenseResult.rows[0].total) || 0;
+
+    res.status(200).json(budget);
   } catch (error) {
-    console.error("Get Budgets Error:", error);
+    console.error("Get Budget Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-// Set or update budget for a category
-exports.setBudget = async (req, res) => {
+// Set/Update budget
+const setBudget = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { category, amount, month, year } = req.body;
-    
-    if (!category || amount === undefined) {
-      return res.status(400).json({ message: "Category and amount are required" });
+    const { monthly_limit, month, year } = req.body;
+
+    if (monthly_limit === undefined || !month || !year) {
+      return res.status(400).json({ message: "Monthly limit, month, and year are required" });
     }
 
-    const currentMonth = month || new Date().getMonth() + 1;
-    const currentYear = year || new Date().getFullYear();
-
     const result = await pool.query(
-      `INSERT INTO budgets (user_id, category, amount, month, year)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (user_id, category, month, year)
-       DO UPDATE SET amount = EXCLUDED.amount, updated_at = CURRENT_TIMESTAMP
+      `INSERT INTO budgets (user_id, monthly_limit, month, year)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (user_id, month, year)
+       DO UPDATE SET monthly_limit = EXCLUDED.monthly_limit, updated_at = CURRENT_TIMESTAMP
        RETURNING *`,
-      [userId, category, parseFloat(amount), currentMonth, currentYear]
+      [userId, monthly_limit, month, year]
     );
 
-    res.status(200).json({
-      message: "Budget updated successfully",
-      budget: result.rows[0],
-    });
+    res.status(200).json(result.rows[0]);
   } catch (error) {
     console.error("Set Budget Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-exports.getBudgetProgress = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const { month, year } = req.query;
-        const currentMonth = month || new Date().getMonth() + 1;
-        const currentYear = year || new Date().getFullYear();
-
-        const query = `
-            SELECT 
-                b.category, 
-                b.amount as budget_amount, 
-                COALESCE(SUM(e.amount), 0) as spent_amount,
-                (b.amount - COALESCE(SUM(e.amount), 0)) as remaining_amount
-            FROM budgets b
-            LEFT JOIN expenses e ON b.category = e.category AND b.user_id = e.user_id 
-                AND EXTRACT(MONTH FROM e.expense_date) = b.month 
-                AND EXTRACT(YEAR FROM e.expense_date) = b.year
-            WHERE b.user_id = $1 AND b.month = $2 AND b.year = $3
-            GROUP BY b.category, b.amount
-        `;
-
-        const result = await pool.query(query, [userId, currentMonth, currentYear]);
-        res.status(200).json(result.rows);
-    } catch (error) {
-        console.error("Budget Progress Error:", error);
-        res.status(500).json({ message: "Server error" });
-    }
-};
+module.exports = { getBudget, setBudget };

@@ -1,80 +1,58 @@
-const pool = require("../config/database");
+const pool = require('../config/database');
 
-exports.getCategories = async (req, res) => {
+// Get categories for a user
+const getCategories = async (req, res) => {
   try {
     const userId = req.user.id;
-    // We allow setting custom categories. Also load defaults or just user ones?
-    // User will manage their own entirely. If they have none, we can send default ones from frontend.
-    const query = `SELECT * FROM categories WHERE user_id = $1 ORDER BY id ASC`;
-    const result = await pool.query(query, [userId]);
-    res.json(result.rows);
-  } catch (err) {
-    console.error("getCategories error:", err);
+    const result = await pool.query(
+      "SELECT * FROM categories WHERE user_id = $1 OR user_id IS NULL ORDER BY name ASC",
+      [userId]
+    );
+    res.status(200).json(result.rows);
+  } catch (error) {
+    console.error("Get Categories Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-exports.addCategory = async (req, res) => {
+// Add a category
+const addCategory = async (req, res) => {
   try {
+    const { name, icon_name, color_hex } = req.body;
     const userId = req.user.id;
-    const { name, icon, color } = req.body;
-    
-    if (!name) {
-      return res.status(400).json({ message: "Category name is required" });
+
+    if (!name || !icon_name || !color_hex) {
+      return res.status(400).json({ message: "All fields are required" });
     }
 
-    const query = `
-      INSERT INTO categories (user_id, name, icon, color)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *
-    `;
-    const result = await pool.query(query, [userId, name, icon, color]);
+    const result = await pool.query(
+      "INSERT INTO categories (user_id, name, icon_name, color_hex) VALUES ($1, $2, $3, $4) RETURNING *",
+      [userId, name, icon_name, color_hex]
+    );
+
     res.status(201).json(result.rows[0]);
-  } catch (err) {
-    console.error("addCategory error:", err);
+  } catch (error) {
+    console.error("Add Category Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-exports.updateCategory = async (req, res) => {
+// Delete a category
+const deleteCategory = async (req, res) => {
   try {
+    const { id } = req.params;
     const userId = req.user.id;
-    const categoryId = req.params.id;
-    const { name, icon, color } = req.body;
 
-    const query = `
-      UPDATE categories
-      SET name = COALESCE($1, name),
-          icon = COALESCE($2, icon),
-          color = COALESCE($3, color)
-      WHERE id = $4 AND user_id = $5
-      RETURNING *
-    `;
-    const result = await pool.query(query, [name, icon, color, categoryId, userId]);
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Category not found or unauthorized" });
-    }
-    res.json(result.rows[0]);
-  } catch (err) {
-    console.error("updateCategory error:", err);
+    await pool.query(
+      "DELETE FROM categories WHERE id = $1 AND user_id = $2",
+      [id, userId]
+    );
+
+    res.status(200).json({ message: "Category deleted" });
+  } catch (error) {
+    console.error("Delete Category Error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
 
-exports.deleteCategory = async (req, res) => {
-  try {
-    const userId = req.user.id;
-    const categoryId = req.params.id;
-
-    const query = `DELETE FROM categories WHERE id = $1 AND user_id = $2 RETURNING *`;
-    const result = await pool.query(query, [categoryId, userId]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Category not found or unauthorized" });
-    }
-    res.json({ message: "Category deleted successfully" });
-  } catch (err) {
-    console.error("deleteCategory error:", err);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+module.exports = { getCategories, addCategory, deleteCategory };

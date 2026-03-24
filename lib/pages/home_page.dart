@@ -26,39 +26,91 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadUser() async {
     final userData = await TokenManager.getUserData();
-    setState(() {
-      username = userData['username'];
-    });
+    setState(() => username = userData['username']);
   }
 
   Future<void> _fetchData() async {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ExpenseProvider>().fetchExpenses();
+      context.read<ExpenseProvider>().initialize();
     });
+  }
+
+  void _showSetBudgetDialog() {
+    final controller = TextEditingController(
+      text: context.read<ExpenseProvider>().budget?.monthlyLimit.toString() ?? '',
+    );
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom,
+          top: 32, left: 24, right: 24,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.getSurface(context),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Set Monthly Budget', style: Theme.of(context).textTheme.displaySmall),
+            const SizedBox(height: 8),
+            Text('Enter your limit for ${DateFormat('MMMM').format(DateTime.now())}', 
+              style: Theme.of(context).textTheme.bodyMedium),
+            const SizedBox(height: 32),
+            TextField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              autofocus: true,
+              style: Theme.of(context).textTheme.displayMedium,
+              decoration: const InputDecoration(prefixText: '₹ ', hintText: '0.00'),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 60,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final limit = double.tryParse(controller.text) ?? 0;
+                  await context.read<ExpenseProvider>().setMonthlyBudget(limit);
+                  Navigator.pop(context);
+                },
+                child: const Text('Save Budget'),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.getBackground(context),
       body: Consumer<ExpenseProvider>(
         builder: (context, provider, child) {
           final recentExpenses = provider.expenses.take(5).toList();
-          final totalSpent = provider.currentMonthBalance;
           
           return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
             slivers: [
               _buildAppBar(),
               SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
                 sliver: SliverList(
                   delegate: SliverChildListDelegate([
-                    _buildBalanceCard(totalSpent),
-                    const SizedBox(height: 32),
-                    _buildRecentHeader(),
+                    _buildEliteBudgetCard(provider),
+                    const SizedBox(height: 40),
+                    _buildSectionHeader('Recent Transactions', () {}),
                     const SizedBox(height: 16),
                     if (provider.isLoading && provider.expenses.isEmpty)
-                      const Center(child: CircularProgressIndicator())
+                      const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
                     else if (provider.expenses.isEmpty)
                       _buildEmptyState()
                     else
@@ -66,7 +118,7 @@ class _HomePageState extends State<HomePage> {
                         expense: expense,
                         onDelete: () => provider.deleteExpense(expense.id),
                       )),
-                    const SizedBox(height: 100), // Spacing for FAB
+                    const SizedBox(height: 100),
                   ]),
                 ),
               ),
@@ -79,54 +131,27 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildAppBar() {
     return SliverAppBar(
-      expandedHeight: 120,
-      floating: false,
-      pinned: true,
-      backgroundColor: AppColors.background,
+      expandedHeight: 140,
+      backgroundColor: Colors.transparent,
       elevation: 0,
+      scrolledUnderElevation: 0,
       flexibleSpace: FlexibleSpaceBar(
         background: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 32),
+          padding: const EdgeInsets.only(left: 20, right: 20, top: 60),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Text(
-                    'Hello, ${username ?? "User"}!',
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Welcome back',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
+                  Text('Hey, ${username ?? "there"}!', style: Theme.of(context).textTheme.displaySmall),
+                  Text('Check your finances today.', style: Theme.of(context).textTheme.bodyMedium),
                 ],
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                    ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.notifications_none, color: AppColors.primaryLight),
-                  onPressed: () {},
-                ),
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: AppColors.primary.withOpacity(0.1),
+                child: const Icon(Icons.person_outline, color: AppColors.primary),
               ),
             ],
           ),
@@ -135,88 +160,78 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildBalanceCard(double amount) {
+  Widget _buildEliteBudgetCard(ExpenseProvider provider) {
+    final budget = provider.budget?.monthlyLimit ?? 0;
+    final spent = provider.currentMonthSpent;
+    final remaining = budget - spent;
+    final progress = budget == 0 ? 0.0 : (spent / budget).clamp(0.0, 1.0);
+
     return CustomCard(
       gradient: AppColors.primaryGradient,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppColors.paddingLarge),
+      borderRadius: AppColors.borderRadiusLarge,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Monthly Expenses',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.white70,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  DateFormat('MMMM').format(DateTime.now()),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
+              const Text('MONTHLY BUDGET', 
+                style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+              GestureDetector(
+                onTap: _showSetBudgetDialog,
+                child: const Icon(Icons.edit_outlined, color: Colors.white70, size: 20),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Text(
-            '₹${amount.toStringAsFixed(2)}',
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          const SizedBox(height: 8),
+          Text('₹${budget.toStringAsFixed(0)}', style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white)),
+          const SizedBox(height: 32),
+          Row(
+            children: [
+              _buildSummaryItem('Spent', '₹${spent.toStringAsFixed(0)}'),
+              const Spacer(),
+              _buildSummaryItem('Balance', '₹${remaining.clamp(0, double.infinity).toStringAsFixed(0)}', isHighlight: true),
+            ],
           ),
           const SizedBox(height: 24),
-          _buildBudgetProgress(0.75), // Placeholder for now
+          _buildEliteProgressBar(progress),
         ],
       ),
     );
   }
 
-  Widget _buildBudgetProgress(double progress) {
+  Widget _buildSummaryItem(String label, String value, {bool isHighlight = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Budget',
-              style: TextStyle(color: Colors.white70, fontSize: 13),
-            ),
-            Text(
-              '${(progress * 100).toInt()}%',
-              style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        const SizedBox(height: 4),
+        Text(value, style: TextStyle(
+          color: Colors.white, 
+          fontSize: 18, 
+          fontWeight: isHighlight ? FontWeight.w900 : FontWeight.w600,
+          letterSpacing: -0.5,
+        )),
+      ],
+    );
+  }
+
+  Widget _buildEliteProgressBar(double progress) {
+    return Column(
+      children: [
         Container(
-          height: 6,
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(4),
-          ),
+          height: 8,
+          width: double.infinity,
+          decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
           child: FractionallySizedBox(
             alignment: Alignment.centerLeft,
-            widthFactor: progress.clamp(0.0, 1.0),
+            widthFactor: progress,
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.white,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: const [BoxShadow(color: Colors.white24, blurRadius: 8, offset: Offset(0, 2))],
               ),
             ),
           ),
@@ -225,39 +240,26 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildRecentHeader() {
+  Widget _buildSectionHeader(String title, VoidCallback onSeeAll) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        const Text(
-          'Recent Transactions',
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            // Navigate to all transactions
-          },
-          child: const Text('See All'),
-        ),
+        Text(title, style: Theme.of(context).textTheme.headlineMedium),
+        TextButton(onPressed: onSeeAll, child: const Text('See all')),
       ],
     );
   }
 
   Widget _buildEmptyState() {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 40),
+      padding: const EdgeInsets.symmetric(vertical: 60),
       child: Column(
         children: [
-          Icon(Icons.receipt_long_outlined, size: 64, color: AppColors.textTertiary),
-          const SizedBox(height: 16),
-          const Text(
-            'No transactions yet',
-            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-          ),
+          Icon(Icons.auto_graph_outlined, size: 64, color: AppColors.getTextTertiary(context).withOpacity(0.5)),
+          const SizedBox(height: 24),
+          Text('No transactions yet.', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text('Your budget looks fresh!', style: Theme.of(context).textTheme.bodyMedium),
         ],
       ),
     );

@@ -113,7 +113,7 @@ class AppTextStyles {
     height: 1.3,
   );
   
-  static const TextStyle label = TextStyle(
+  static final TextStyle label = TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w500,
     color: AppColors.textPrimary,
@@ -121,7 +121,7 @@ class AppTextStyles {
     height: 1.3,
   );
   
-  static const TextStyle labelSmall = TextStyle(
+  static final TextStyle labelSmall = TextStyle(
     fontSize: 12,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
@@ -180,10 +180,10 @@ class AppTextStyles {
     height: 1.4,
   );
   
-  static const TextStyle inputHint = TextStyle(
+  static final TextStyle inputHint = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.normal,
-    color: AppColors.textHint,
+    color: AppColors.textSecondary,
     fontFamily: fontFamily,
     height: 1.4,
   );

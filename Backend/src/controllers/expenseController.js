@@ -3,27 +3,23 @@ const pool = require('../config/database');
 // ================= ADD EXPENSE =================
 const addExpense = async (req, res) => {
   try {
-    const { amount, category, description, expense_date } = req.body;
+    const { amount, category, category_id, description, expense_date } = req.body;
     const userId = req.user.id;
 
-    console.log("Decoded user:", req.user);
-    console.log("User ID:", req.user?.id);
-
-    if (!amount || !category) {
-      return res.status(400).json({
-        message: "Amount and category are required",
-      });
+    if (!amount) {
+      return res.status(400).json({ message: "Amount is required" });
     }
 
     const result = await pool.query(
       `INSERT INTO expenses 
-      (user_id, amount, category, description, expense_date) 
-      VALUES ($1, $2, $3, $4, $5)
+      (user_id, amount, category_id, category, description, expense_date) 
+      VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *`,
       [
         userId,
         parseFloat(amount),
-        category,
+        category_id || null,
+        category || null,
         description || null,
         expense_date ? new Date(expense_date) : new Date()
       ]
@@ -46,7 +42,11 @@ const getExpenses = async (req, res) => {
     const userId = req.user.id;
 
     const result = await pool.query(
-      "SELECT * FROM expenses WHERE user_id = $1 ORDER BY expense_date DESC",
+      `SELECT e.*, c.name as category_name, c.icon_name, c.color_hex 
+       FROM expenses e 
+       LEFT JOIN categories c ON e.category_id = c.id 
+       WHERE e.user_id = $1 
+       ORDER BY e.expense_date DESC`,
       [userId]
     );
 
@@ -85,26 +85,26 @@ const deleteExpense = async (req, res) => {
 const updateExpense = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // ✅ Add validation HERE
     if (isNaN(id)) {
       return res.status(400).json({ message: "Invalid expense id" });
     }
 
-    const { amount, category, description, expense_date } = req.body;
+    const { amount, category, category_id, description, expense_date } = req.body;
     const userId = req.user.id;
 
     const result = await pool.query(
       `UPDATE expenses SET 
         amount = COALESCE($1, amount),
         category = COALESCE($2, category),
-        description = COALESCE($3, description),
-        expense_date = COALESCE($4, expense_date)
-      WHERE id = $5 AND user_id = $6
+        category_id = COALESCE($3, category_id),
+        description = COALESCE($4, description),
+        expense_date = COALESCE($5, expense_date)
+      WHERE id = $6 AND user_id = $7
       RETURNING *`,
       [
         amount !== undefined ? amount : null,
         category !== undefined ? category : null,
+        category_id !== undefined ? category_id : null,
         description !== undefined ? description : null,
         expense_date !== undefined ? new Date(expense_date) : null,
         id,

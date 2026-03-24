@@ -32,6 +32,8 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Expense Tracker',
       theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system, // Supports both light/dark based on system setting
       initialRoute: '/',
       routes: {
         '/': (context) {

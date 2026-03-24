@@ -15,57 +15,47 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   final _searchController = TextEditingController();
   String _query = '';
-  List<String> _selectedFilters = [];
-
-  final List<String> _filters = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment'];
+  final List<String> _selectedFilters = [];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Search'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      backgroundColor: AppColors.getBackground(context),
+      appBar: AppBar(title: const Text('Search')),
       body: Consumer<ExpenseProvider>(
         builder: (context, provider, child) {
           final results = provider.expenses.where((e) {
-            final matchesQuery = e.displayTitle.toLowerCase().contains(_query.toLowerCase()) || 
-                               e.category.toLowerCase().contains(_query.toLowerCase());
+            final matchesQuery = e.category.toLowerCase().contains(_query.toLowerCase()) || 
+                                (e.description?.toLowerCase().contains(_query.toLowerCase()) ?? false);
             final matchesFilter = _selectedFilters.isEmpty || _selectedFilters.contains(e.category);
             return matchesQuery && matchesFilter;
           }).toList();
 
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSearchBar(),
-                const SizedBox(height: 20),
-                _buildFilterChips(),
-                const SizedBox(height: 24),
-                Text(
-                  '${results.length} results found',
-                  style: const TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: results.isEmpty
-                      ? _buildEmptyState()
-                      : ListView.builder(
-                          itemCount: results.length,
-                          itemBuilder: (context, index) {
-                            return ExpenseListItem(
-                              expense: results[index],
-                              onDelete: () => provider.deleteExpense(results[index].id),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(AppColors.paddingLarge),
+                child: _buildSearchBar(),
+              ),
+              _buildFilterChips(provider.categories.map((c) => c.name).toList()),
+              const SizedBox(height: 24),
+              Expanded(
+                child: results.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: AppColors.paddingLarge),
+                        physics: const BouncingScrollPhysics(),
+                        itemCount: results.length,
+                        itemBuilder: (context, index) {
+                          return ExpenseListItem(
+                            expense: results[index],
+                            onDelete: () => provider.deleteExpense(results[index].id),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),
@@ -73,71 +63,47 @@ class _SearchPageState extends State<SearchPage> {
   }
 
   Widget _buildSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4)),
-        ],
-      ),
-      child: TextField(
-        controller: _searchController,
-        onChanged: (val) => setState(() => _query = val),
-        decoration: InputDecoration(
-          hintText: 'Search transactions...',
-          hintStyle: const TextStyle(color: AppColors.textTertiary),
-          prefixIcon: const Icon(Icons.search, color: AppColors.primary),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(vertical: 15),
-          suffixIcon: _query.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.clear, size: 18),
-                  onPressed: () {
-                    _searchController.clear();
-                    setState(() => _query = '');
-                  },
-                )
-              : null,
-        ),
+    return TextField(
+      controller: _searchController,
+      onChanged: (val) => setState(() => _query = val),
+      decoration: InputDecoration(
+        hintText: 'Search by category or note...',
+        prefixIcon: const Icon(Icons.search_rounded, color: AppColors.primary, size: 22),
+        suffixIcon: _query.isNotEmpty
+            ? IconButton(icon: const Icon(Icons.close_rounded, size: 20), onPressed: () {
+                _searchController.clear();
+                setState(() => _query = '');
+              })
+            : null,
       ),
     );
   }
 
-  Widget _buildFilterChips() {
+  Widget _buildFilterChips(List<String> categories) {
+    if (categories.isEmpty) return const SizedBox.shrink();
+    
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: AppColors.paddingLarge),
+      physics: const BouncingScrollPhysics(),
       child: Row(
-        children: _filters.map((filter) {
-          final isSelected = _selectedFilters.contains(filter);
+        children: categories.map((cat) {
+          final isSelected = _selectedFilters.contains(cat);
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(filter),
+            padding: const EdgeInsets.only(right: 10),
+            child: ChoiceChip(
+              label: Text(cat),
               selected: isSelected,
               onSelected: (val) {
                 setState(() {
-                  if (val) {
-                    _selectedFilters.add(filter);
-                  } else {
-                    _selectedFilters.remove(filter);
-                  }
+                  if (val) _selectedFilters.add(cat); else _selectedFilters.remove(cat);
                 });
               },
-              backgroundColor: AppColors.surface,
               selectedColor: AppColors.primary.withOpacity(0.1),
-              checkmarkColor: AppColors.primary,
-              labelStyle: TextStyle(
-                color: isSelected ? AppColors.primary : AppColors.textSecondary,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                fontSize: 13,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-                side: BorderSide(
-                  color: isSelected ? AppColors.primary : Colors.transparent,
-                ),
-              ),
+              backgroundColor: AppColors.getSurface(context),
+              labelStyle: TextStyle(color: isSelected ? AppColors.primary : AppColors.getTextSecondary(context), fontSize: 13, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: isSelected ? AppColors.primary : AppColors.getBorder(context))),
+              showCheckmark: false,
             ),
           );
         }).toList(),
@@ -150,12 +116,10 @@ class _SearchPageState extends State<SearchPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 64, color: AppColors.textTertiary),
-          const SizedBox(height: 16),
-          const Text(
-            'No transactions found',
-            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-          ),
+          Icon(Icons.manage_search_rounded, size: 80, color: AppColors.getBorder(context)),
+          const SizedBox(height: 24),
+          Text(_query.isEmpty ? 'Search your transactions' : 'No results found', 
+            style: Theme.of(context).textTheme.titleMedium),
         ],
       ),
     );

@@ -23,25 +23,25 @@ const setupDb = async () => {
           id SERIAL PRIMARY KEY,
           user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
           name VARCHAR(100) NOT NULL,
-          icon VARCHAR(50),
-          color BIGINT,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+          icon_name VARCHAR(100) NOT NULL,
+          color_hex VARCHAR(20) NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          UNIQUE(user_id, name)
       );
     `);
     await pool.query(`
       CREATE TABLE IF NOT EXISTS budgets (
           id SERIAL PRIMARY KEY,
           user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-          category VARCHAR(100) NOT NULL,
-          amount NUMERIC(10, 2) NOT NULL,
+          monthly_limit NUMERIC(10, 2) NOT NULL DEFAULT 0,
           month INTEGER NOT NULL,
           year INTEGER NOT NULL,
           created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          UNIQUE(user_id, category, month, year)
+          UNIQUE(user_id, month, year)
       );
     `);
-    console.log("Budgets table ensured.");
+    console.log("Database schema updated.");
   } catch (err) {
     console.error("Failed to run migrations on startup", err);
   }

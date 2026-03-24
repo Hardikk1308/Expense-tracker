@@ -1,23 +1,23 @@
-class BudgetModel {
+class Budget {
   final int id;
-  final String category;
-  final double amount;
+  final double monthlyLimit;
+  final double currentSpent;
   final int month;
   final int year;
 
-  BudgetModel({
+  Budget({
     required this.id,
-    required this.category,
-    required this.amount,
+    required this.monthlyLimit,
+    required this.currentSpent,
     required this.month,
     required this.year,
   });
 
-  factory BudgetModel.fromJson(Map<String, dynamic> json) {
-    return BudgetModel(
+  factory Budget.fromJson(Map<String, dynamic> json) {
+    return Budget(
       id: json['id'],
-      category: json['category'],
-      amount: double.parse(json['amount'].toString()),
+      monthlyLimit: double.parse(json['monthly_limit'].toString()),
+      currentSpent: double.parse((json['current_spent'] ?? 0).toString()),
       month: json['month'],
       year: json['year'],
     );
@@ -26,10 +26,13 @@ class BudgetModel {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'category': category,
-      'amount': amount,
+      'monthly_limit': monthlyLimit,
+      'current_spent': currentSpent,
       'month': month,
       'year': year,
     };
   }
+
+  double get remaining => monthlyLimit - currentSpent;
+  double get progress => monthlyLimit == 0 ? 0 : (currentSpent / monthlyLimit).clamp(0, 1.0);
 }

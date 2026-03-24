@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../provider/expense_provider.dart';
 import '../constants/app_colors.dart';
-import '../widgets/category_breakdown_card.dart';
+import '../models/expense_model.dart';
 import '../widgets/custom_card.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
@@ -15,45 +15,54 @@ class AnalyticsPage extends StatefulWidget {
 }
 
 class _AnalyticsPageState extends State<AnalyticsPage> {
-  String _selectedTimeline = 'This Month';
+  @override
+  void initState() {
+    super.initState();
+    _fetchData();
+  }
+
+  void _fetchData() {
+    context.read<ExpenseProvider>().initialize();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: const Text('Analytics'),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-      ),
+      backgroundColor: AppColors.getBackground(context),
+      appBar: AppBar(title: const Text('Analytics')),
       body: Consumer<ExpenseProvider>(
         builder: (context, provider, child) {
-          if (provider.isLoading && provider.expenses.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          if (provider.expenses.isEmpty) return _buildEmptyState();
 
-          if (provider.expenses.isEmpty) {
-            return _buildEmptyState();
-          }
+          final categoryTotals = _calculateCategoryTotals(provider);
+          final weeklyData = _calculateWeeklySpending(provider.expenses);
+          final totalMonthly = provider.currentMonthSpent;
+          final dailyAvg = totalMonthly / DateTime.now().day;
 
-          final categoryTotals = _calculateCategoryTotals(provider.expenses);
-          final dailySpending = _calculateDailySpending(provider.expenses);
-
-          return SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSpendingHeader(provider.currentMonthBalance),
-                const SizedBox(height: 32),
-                _buildTimelineChart(dailySpending),
-                const SizedBox(height: 32),
-                CategoryBreakdownCard(categoryTotals: categoryTotals),
-                const SizedBox(height: 32),
-                _buildSpendingSummary(categoryTotals),
-                const SizedBox(height: 32),
-              ],
+          return RefreshIndicator(
+            onRefresh: () async => _fetchData(),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppColors.paddingLarge),
+              physics: const BouncingScrollPhysics(),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSummarySection(totalMonthly, dailyAvg),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('Weekly Expenses'),
+                  const SizedBox(height: 16),
+                  _buildWeeklyChart(weeklyData),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('Spend by Category'),
+                  const SizedBox(height: 16),
+                  _buildCategoryDonutChart(categoryTotals),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle('Insights'),
+                  const SizedBox(height: 16),
+                  _buildInsightsCard(categoryTotals),
+                  const SizedBox(height: 40),
+                ],
+              ),
             ),
           );
         },
@@ -61,100 +70,136 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
   }
 
-  Widget _buildSpendingHeader(double total) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _buildSummarySection(double total, double avg) {
+    return Row(
       children: [
-        const Text(
-          'Total Spending',
-          style: TextStyle(fontSize: 14, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
+        Expanded(
+          child: CustomCard(
+            color: AppColors.primary.withOpacity(0.05),
+            border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('MONTH TOTAL', style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: 8),
+                Text('₹${total.toStringAsFixed(0)}', style: Theme.of(context).textTheme.displaySmall),
+              ],
+            ),
+          ),
         ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              '₹${total.toStringAsFixed(2)}',
-              style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
+        const SizedBox(width: 16),
+        Expanded(
+          child: CustomCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('DAILY AVG', style: Theme.of(context).textTheme.labelSmall),
+                const SizedBox(height: 8),
+                Text('₹${avg.toStringAsFixed(0)}', style: Theme.of(context).textTheme.displaySmall),
+              ],
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10),
-                ],
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.calendar_today, size: 14, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    _selectedTimeline,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.primary),
-                  ),
-                ],
-              ),
-            ),
-          ],
+          ),
         ),
       ],
     );
   }
 
-  Widget _buildTimelineChart(List<FlSpot> spots) {
+  Widget _buildSectionTitle(String title) {
+    return Text(title, style: Theme.of(context).textTheme.headlineMedium);
+  }
+
+  Map<String, double> _calculateCategoryTotals(ExpenseProvider provider) {
+    final totals = <String, double>{};
+    for (var exp in provider.expenses) {
+      totals[exp.category] = (totals[exp.category] ?? 0) + exp.amount;
+    }
+    return totals;
+  }
+
+  List<double> _calculateWeeklySpending(List<Expense> expenses) {
+    final now = DateTime.now();
+    final weekly = List.filled(7, 0.0);
+    for (var exp in expenses) {
+      final diff = now.difference(exp.expenseDate).inDays;
+      if (diff >= 0 && diff < 7) weekly[6 - diff] += exp.amount;
+    }
+    return weekly;
+  }
+
+  Widget _buildWeeklyChart(List<double> data) {
     return CustomCard(
-      gradient: AppColors.surfaceGradient,
-      padding: const EdgeInsets.fromLTRB(16, 24, 24, 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Spending Trend',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 32),
-          SizedBox(
-            height: 200,
-            child: LineChart(
-              LineChartData(
-                gridData: FlGridData(
-                  show: true,
-                  drawVerticalLine: false,
-                  getDrawingHorizontalLine: (value) => FlLine(
-                    color: Colors.grey.withOpacity(0.1),
-                    strokeWidth: 1,
-                  ),
+      height: 220,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: (data.reduce((a, b) => a > b ? a : b) * 1.2).clamp(100, double.infinity),
+          barGroups: List.generate(7, (i) => BarChartGroupData(
+            x: i,
+            barRods: [
+              BarChartRodData(
+                toY: data[i],
+                color: AppColors.primary,
+                width: 12,
+                borderRadius: BorderRadius.circular(4),
+                backDrawRodData: BackgroundBarChartRodData(
+                  show: true, 
+                  toY: data.reduce((a, b) => a > b ? a : b) * 1.2, 
+                  color: AppColors.primary.withOpacity(0.05),
                 ),
-                titlesData: const FlTitlesData(
-                  show: true,
-                  rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                  bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                      showTitles: true,
-                      reservedSize: 30,
-                      interval: 5,
-                    ),
-                  ),
-                ),
-                borderData: FlBorderData(show: false),
-                lineBarsData: [
-                  LineChartBarData(
-                    spots: spots,
-                    isCurved: true,
-                    color: AppColors.primary,
-                    barWidth: 4,
-                    dotData: const FlDotData(show: false),
-                    belowBarData: BarAreaData(
-                      show: true,
-                      color: AppColors.primary.withOpacity(0.1),
-                    ),
-                  ),
-                ],
               ),
+            ],
+          )),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (v, m) => Padding(
+                padding: const EdgeInsets.only(top: 8.0),
+                child: Text(['M','T','W','T','F','S','S'][v.toInt() % 7], 
+                  style: Theme.of(context).textTheme.labelSmall),
+              ),
+            )),
+            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryDonutChart(Map<String, double> totals) {
+    final total = totals.values.reduce((a, b) => a + b);
+    return CustomCard(
+      height: 250,
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: PieChart(
+              PieChartData(
+                sectionsSpace: 4,
+                centerSpaceRadius: 50,
+                sections: totals.entries.map((e) {
+                  return PieChartSectionData(
+                    color: _getCategoryColor(e.key),
+                    value: e.value,
+                    title: '',
+                    radius: 12,
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+          const SizedBox(width: 24),
+          Expanded(
+            flex: 3,
+            child: ListView(
+              shrinkWrap: true,
+              children: totals.entries.map((e) => _buildLegendItem(e.key, e.value, total)).toList(),
             ),
           ),
         ],
@@ -162,41 +207,39 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
   }
 
-  Widget _buildSpendingSummary(Map<String, double> categoryTotals) {
-    final highestCategory = categoryTotals.entries.reduce((a, b) => a.value > b.value ? a : b).key;
-
-    return CustomCard(
-      padding: const EdgeInsets.all(24),
-      gradient: AppColors.surfaceGradient,
+  Widget _buildLegendItem(String name, double value, double total) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(Icons.insights, color: Colors.orange, size: 28),
-          ),
-          const SizedBox(width: 20),
+          Container(width: 8, height: 8, decoration: BoxDecoration(color: _getCategoryColor(name), shape: BoxShape.circle)),
+          const SizedBox(width: 8),
+          Expanded(child: Text(name, style: Theme.of(context).textTheme.bodySmall, maxLines: 1)),
+          Text('${(value / total * 100).toInt()}%', style: Theme.of(context).textTheme.labelSmall),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInsightsCard(Map<String, double> totals) {
+    final sorted = totals.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final highest = sorted.first;
+    
+    return CustomCard(
+      color: Colors.amber.withOpacity(0.05),
+      border: Border.all(color: Colors.amber.withOpacity(0.2), width: 1),
+      child: Row(
+        children: [
+          const Icon(Icons.lightbulb_outline, color: Colors.amber, size: 28),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Main Spending',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary, fontWeight: FontWeight.w500),
-                ),
+                Text('Spending Insight', style: Theme.of(context).textTheme.titleSmall),
                 const SizedBox(height: 4),
-                Text(
-                  highestCategory,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'This is your highest expense area this month.',
-                  style: TextStyle(fontSize: 12, color: AppColors.textTertiary),
-                ),
+                Text('You spent the most on "${highest.key}" this month. Consider tracking this more closely.', 
+                  style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
           ),
@@ -205,44 +248,25 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     );
   }
 
+  Color _getCategoryColor(String name) {
+    try {
+      final cat = context.read<ExpenseProvider>().categories.firstWhere((c) => c.name.toLowerCase() == name.toLowerCase());
+      return cat.color;
+    } catch (_) {
+      return Expense.getColorFromText(null, name);
+    }
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.bar_chart_outlined, size: 64, color: AppColors.textTertiary),
-          const SizedBox(height: 16),
-          const Text(
-            'No statistics for the current month',
-            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-          ),
+          Icon(Icons.auto_awesome_mosaic_outlined, size: 80, color: AppColors.getBorder(context)),
+          const SizedBox(height: 24),
+          Text('No data to analyze.', style: Theme.of(context).textTheme.titleMedium),
         ],
       ),
     );
-  }
-
-  Map<String, double> _calculateCategoryTotals(List providerExpenses) {
-    Map<String, double> totals = {};
-    for (var expense in providerExpenses) {
-      totals[expense.category] = (totals[expense.category] ?? 0) + expense.amount;
-    }
-    return totals;
-  }
-
-  List<FlSpot> _calculateDailySpending(List providerExpenses) {
-    Map<int, double> daily = {};
-    final now = DateTime.now();
-
-    for (var expense in providerExpenses) {
-      if (expense.expenseDate.month == now.month && expense.expenseDate.year == now.year) {
-        daily[expense.expenseDate.day] = (daily[expense.expenseDate.day] ?? 0) + expense.amount;
-      }
-    }
-
-    List<FlSpot> spots = [];
-    for (int day = 1; day <= 30; day++) {
-      spots.add(FlSpot(day.toDouble(), daily[day] ?? 0));
-    }
-    return spots;
   }
 }

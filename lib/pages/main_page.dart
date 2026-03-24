@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'home_page.dart';
 import 'add_expense_page.dart';
 import 'analytics_page.dart';
-import 'search_page.dart';
 import 'settings_page.dart';
 import '../constants/app_colors.dart';
 
@@ -19,7 +18,6 @@ class _MainPageState extends State<MainPage> {
   final List<Widget> _pages = [
     const HomePage(),
     const AnalyticsPage(),
-    const SearchPage(),
     const SettingsPage(),
   ];
 
@@ -28,9 +26,7 @@ class _MainPageState extends State<MainPage> {
       context,
       MaterialPageRoute(
         builder: (context) => AddExpensePage(
-          onFinished: () {
-            Navigator.pop(context);
-          },
+          onFinished: () => Navigator.pop(context),
         ),
         fullscreenDialog: true,
       ),
@@ -40,6 +36,8 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBody: true,
+      backgroundColor: AppColors.getBackground(context),
       body: IndexedStack(
         index: _currentIndex,
         children: _pages,
@@ -47,24 +45,33 @@ class _MainPageState extends State<MainPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: _onAddPressed,
         backgroundColor: AppColors.primary,
-        elevation: 4,
-        child: const Icon(Icons.add, size: 32, color: Colors.white),
+        elevation: 10,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        child: const Icon(Icons.add_rounded, size: 36, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: BottomAppBar(
-        padding: EdgeInsets.zero,
-        notchMargin: 10,
-        shape: const CircularNotchedRectangle(),
-        color: AppColors.surface,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(0, Icons.dashboard, 'Home'),
-            _buildNavItem(1, Icons.bar_chart, 'Analytics'),
-            const SizedBox(width: 48), // Space for FAB
-            _buildNavItem(2, Icons.search, 'Search'),
-            _buildNavItem(3, Icons.settings, 'Settings'),
-          ],
+      bottomNavigationBar: Container(
+        padding: const EdgeInsets.only(top: 8),
+        decoration: BoxDecoration(
+          color: AppColors.getSurface(context),
+          boxShadow: [AppColors.softShadow(context)],
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: BottomAppBar(
+          padding: EdgeInsets.zero,
+          notchMargin: 12,
+          elevation: 0,
+          color: Colors.transparent,
+          shape: const CircularNotchedRectangle(),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, Icons.grid_view_rounded, 'Dashboard'),
+              _buildNavItem(1, Icons.auto_graph_rounded, 'Analytics'),
+              const SizedBox(width: 48), // Space for FAB
+              _buildNavItem(2, Icons.settings_rounded, 'Settings'),
+            ],
+          ),
         ),
       ),
     );
@@ -74,25 +81,29 @@ class _MainPageState extends State<MainPage> {
     bool isSelected = _currentIndex == index;
     return InkWell(
       onTap: () => setState(() => _currentIndex = index),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? AppColors.primary : AppColors.textTertiary,
-            size: 26,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              color: isSelected ? AppColors.primary : AppColors.textTertiary,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.primary : AppColors.getTextTertiary(context).withOpacity(0.5),
+              size: 24,
             ),
-          ),
-        ],
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                fontSize: 10,
+                color: isSelected ? AppColors.primary : AppColors.getTextTertiary(context).withOpacity(0.5),
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

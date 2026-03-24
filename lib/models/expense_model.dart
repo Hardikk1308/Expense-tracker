@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 class Expense {
   final int id;
   final double amount;
-  final String category;
+  final int? categoryId; // New
+  final String category; // Kept for legacy
+  final String? categoryName; // From Join
+  final String? iconName; // From Join
+  final String? colorHex; // From Join
   final String? description;
   final DateTime expenseDate;
   final DateTime? createdAt;
@@ -12,7 +16,11 @@ class Expense {
   Expense({
     required this.id,
     required this.amount,
+    this.categoryId,
     required this.category,
+    this.categoryName,
+    this.iconName,
+    this.colorHex,
     this.description,
     required this.expenseDate,
     this.createdAt,
@@ -23,7 +31,11 @@ class Expense {
     return Expense(
       id: json['id'],
       amount: double.parse(json['amount'].toString()),
-      category: json['category'],
+      categoryId: json['category_id'],
+      category: json['category_name'] ?? json['category'] ?? 'Others',
+      categoryName: json['category_name'],
+      iconName: json['icon_name'],
+      colorHex: json['color_hex'],
       description: json['description'],
       expenseDate: DateTime.parse(json['expense_date']),
       createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : null,
@@ -35,13 +47,15 @@ class Expense {
     return {
       'id': id,
       'amount': amount,
+      'category_id': categoryId,
       'category': category,
       'description': description,
       'expense_date': expenseDate.toIso8601String(),
-      'created_at': createdAt?.toIso8601String(),
-      'updated_at': updatedAt?.toIso8601String(),
     };
   }
+
+  IconData get icon => getIconFromText(iconName, category);
+  Color get color => getColorFromText(colorHex, category);
 
   String get formattedAmount {
     return '₹${amount.toStringAsFixed(2)}';
@@ -71,7 +85,24 @@ class Expense {
   }
 
   // Category icon mapping (returns IconData)
-  static IconData getIconData(String category) {
+  static IconData getIconFromText(String? iconName, String category) {
+    if (iconName != null) {
+      switch (iconName.toLowerCase()) {
+        case 'restaurant': return Icons.restaurant;
+        case 'directions_car': return Icons.directions_car;
+        case 'bolt': return Icons.bolt;
+        case 'shopping_bag': return Icons.shopping_bag;
+        case 'local_hospital': return Icons.local_hospital;
+        case 'movie': return Icons.movie;
+        case 'local_cafe': return Icons.local_cafe;
+        case 'fitness_center': return Icons.fitness_center;
+        case 'pets': return Icons.pets;
+        case 'home': return Icons.home;
+        case 'work': return Icons.work;
+        default: return Icons.category;
+      }
+    }
+
     switch (category.toLowerCase()) {
       case 'food':
       case 'food & dining':
@@ -104,7 +135,14 @@ class Expense {
   }
 
   // Category color mapping
-  static Color getColor(String category) {
+  static Color getColorFromText(String? hex, String category) {
+    if (hex != null) {
+      final hexString = hex.replaceAll('#', '');
+      if (hexString.length == 6) {
+        return Color(int.parse('FF$hexString', radix: 16));
+      }
+    }
+
     switch (category.toLowerCase()) {
       case 'food':
       case 'food & dining':
@@ -130,11 +168,14 @@ class Expense {
     }
   }
 
-  // Copy with method for updates
   Expense copyWith({
     int? id,
     double? amount,
+    int? categoryId,
     String? category,
+    String? categoryName,
+    String? iconName,
+    String? colorHex,
     String? description,
     DateTime? expenseDate,
     DateTime? createdAt,
@@ -143,7 +184,11 @@ class Expense {
     return Expense(
       id: id ?? this.id,
       amount: amount ?? this.amount,
+      categoryId: categoryId ?? this.categoryId,
       category: category ?? this.category,
+      categoryName: categoryName ?? this.categoryName,
+      iconName: iconName ?? this.iconName,
+      colorHex: colorHex ?? this.colorHex,
       description: description ?? this.description,
       expenseDate: expenseDate ?? this.expenseDate,
       createdAt: createdAt ?? this.createdAt,

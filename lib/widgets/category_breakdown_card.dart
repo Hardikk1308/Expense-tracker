@@ -11,57 +11,56 @@ class CategoryBreakdownCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (categoryTotals.isEmpty) return const SizedBox.shrink();
+
     final List<PieChartSectionData> sections = [];
     final List<Widget> legends = [];
+    final double grandTotal = categoryTotals.values.reduce((a, b) => a + b);
 
-    int index = 0;
     categoryTotals.forEach((category, total) {
-      final color = Expense.getColor(category);
+      final color = Expense.getColorFromText(null, category);
       sections.add(PieChartSectionData(
         color: color,
         value: total,
         title: '',
-        radius: 20,
+        radius: 12,
         showTitle: false,
       ));
 
-      legends.add(
-        _buildLegendItem(category, total, color),
-      );
-      index++;
+      legends.add(_buildLegendItem(context, category, total, color, grandTotal));
     });
 
     return CustomCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Spending Breakdown',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('SPENDING BREAKDOWN', style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.5)),
+              const Icon(Icons.analytics_outlined, size: 16, color: AppColors.primary),
+            ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 32),
           Row(
             children: [
-              SizedBox(
-                height: 140,
-                width: 140,
-                child: PieChart(
-                  PieChartData(
-                    sectionsSpace: 4,
-                    centerSpaceRadius: 40,
-                    sections: sections,
+              Expanded(
+                flex: 45,
+                child: SizedBox(
+                  height: 140,
+                  child: PieChart(
+                    PieChartData(
+                      sectionsSpace: 4,
+                      centerSpaceRadius: 40,
+                      sections: sections,
+                    ),
                   ),
                 ),
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 32),
               Expanded(
-                child: Column(
-                  children: legends,
-                ),
+                flex: 55,
+                child: Column(children: legends),
               ),
             ],
           ),
@@ -70,39 +69,25 @@ class CategoryBreakdownCard extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendItem(String name, double amount, Color color) {
+  Widget _buildLegendItem(BuildContext context, String name, double amount, Color color, double grandTotal) {
+    final double percentage = (amount / grandTotal) * 100;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Container(
-            width: 12,
-            height: 12,
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
+          Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              name,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
-              ),
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(name, style: Theme.of(context).textTheme.bodySmall?.copyWith(fontSize: 12, fontWeight: FontWeight.bold), maxLines: 1),
+                Text('₹${amount.toStringAsFixed(0)}', style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10)),
+              ],
             ),
           ),
-          Text(
-            '₹${amount.toStringAsFixed(0)}',
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text('${percentage.toInt()}%', style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primary)),
         ],
       ),
     );

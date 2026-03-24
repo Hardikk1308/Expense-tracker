@@ -5,10 +5,12 @@ class CustomCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final Color? color;
-  final Gradient? gradient; // Added gradient support
+  final Gradient? gradient;
   final double? borderRadius;
   final Border? border;
   final List<BoxShadow>? boxShadow;
+  final double? height;
+  final double? width;
 
   const CustomCard({
     super.key,
@@ -19,25 +21,23 @@ class CustomCard extends StatelessWidget {
     this.borderRadius,
     this.border,
     this.boxShadow,
+    this.height,
+    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: width,
+      height: height,
       decoration: BoxDecoration(
-        color: gradient == null ? (color ?? AppColors.surface) : null,
+        color: gradient == null ? (color ?? AppColors.getSurface(context)) : null,
         gradient: gradient,
-        borderRadius: BorderRadius.circular(borderRadius ?? 20),
-        border: border,
-        boxShadow: boxShadow ?? [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(borderRadius ?? AppColors.borderRadius),
+        border: border ?? Border.all(color: AppColors.getBorder(context), width: 1),
+        boxShadow: boxShadow ?? [AppColors.softShadow(context)],
       ),
-      padding: padding ?? const EdgeInsets.all(20),
+      padding: padding ?? const EdgeInsets.all(AppColors.padding),
       child: child,
     );
   }

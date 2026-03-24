@@ -17,8 +17,8 @@ class ExpenseListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = Expense.getColor(expense.category);
-    final icon = Expense.getIconData(expense.category);
+    final color = expense.color;
+    final icon = expense.icon;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -47,10 +47,10 @@ class ExpenseListItem extends StatelessWidget {
                     children: [
                       Text(
                         expense.displayTitle,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: AppColors.getTextPrimary(context),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -58,9 +58,9 @@ class ExpenseListItem extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '${expense.category} • ${DateFormat('MMM dd').format(expense.expenseDate)}',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 13,
-                          color: AppColors.textSecondary,
+                          color: AppColors.getTextSecondary(context),
                         ),
                       ),
                     ],

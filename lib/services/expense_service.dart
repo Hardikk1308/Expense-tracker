@@ -6,12 +6,14 @@ class ExpenseService {
   static Future<Map<String, dynamic>> addExpense({
     required double amount,
     required String category,
+    int? categoryId,
     required String description,
     required DateTime expenseDate,
   }) async {
     final result = await BaseApiService.post('/expenses', {
       'amount': amount,
       'category': category,
+      'category_id': categoryId,
       'description': description,
       'expense_date': expenseDate.toIso8601String(),
     });
