@@ -4,8 +4,7 @@ import '../provider/expense_provider.dart';
 import '../constants/app_colors.dart';
 import '../widgets/custom_card.dart';
 import '../widgets/expense_list_item.dart';
-import '../services/token_manager.dart';
-import 'package:intl/intl.dart';
+import '../l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,251 +14,139 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? username;
-
   @override
   void initState() {
     super.initState();
-    _loadUser();
     _fetchData();
   }
 
-  Future<void> _loadUser() async {
-    final userData = await TokenManager.getUserData();
-    setState(() => username = userData['username']);
-  }
-
-  Future<void> _fetchData() async {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ExpenseProvider>().initialize();
-    });
-  }
-
-  void _showSetBudgetDialog() {
-    final controller = TextEditingController(
-      text: context.read<ExpenseProvider>().budget?.monthlyLimit.toString() ?? '',
-    );
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom,
-          top: 32, left: 24, right: 24,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.getSurface(context),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Set Monthly Budget', style: Theme.of(context).textTheme.displaySmall),
-            const SizedBox(height: 8),
-            Text('Enter your limit for ${DateFormat('MMMM').format(DateTime.now())}', 
-              style: Theme.of(context).textTheme.bodyMedium),
-            const SizedBox(height: 32),
-            TextField(
-              controller: controller,
-              keyboardType: TextInputType.number,
-              autofocus: true,
-              style: Theme.of(context).textTheme.displayMedium,
-              decoration: const InputDecoration(prefixText: '₹ ', hintText: '0.00'),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              height: 60,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final limit = double.tryParse(controller.text) ?? 0;
-                  await context.read<ExpenseProvider>().setMonthlyBudget(limit);
-                  Navigator.pop(context);
-                },
-                child: const Text('Save Budget'),
-              ),
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
-    );
+  void _fetchData() {
+    context.read<ExpenseProvider>().initialize();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
       body: Consumer<ExpenseProvider>(
         builder: (context, provider, child) {
-          final recentExpenses = provider.expenses.take(5).toList();
-          
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              _buildAppBar(),
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    _buildEliteBudgetCard(provider),
-                    const SizedBox(height: 40),
-                    _buildSectionHeader('Recent Transactions', () {}),
-                    const SizedBox(height: 16),
-                    if (provider.isLoading && provider.expenses.isEmpty)
-                      const Center(child: Padding(padding: EdgeInsets.all(40), child: CircularProgressIndicator()))
-                    else if (provider.expenses.isEmpty)
-                      _buildEmptyState()
-                    else
-                      ...recentExpenses.map((expense) => ExpenseListItem(
-                        expense: expense,
-                        onDelete: () => provider.deleteExpense(expense.id),
-                      )),
-                    const SizedBox(height: 100),
-                  ]),
+          final totalSpent = provider.currentMonthSpent;
+          final budget = provider.budget?.monthlyLimit ?? 0;
+          final balance = (budget - totalSpent).clamp(0.0, double.infinity);
+          final progress = budget > 0 ? (totalSpent / budget).clamp(0.0, 1.0) : 0.0;
+
+          return RefreshIndicator(
+            onRefresh: () async => _fetchData(),
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                _buildSliverAppBar(l10n),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: AppColors.paddingLarge),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 24),
+                        _buildBudgetCard(totalSpent, balance, progress, l10n),
+                        const SizedBox(height: 40),
+                        _buildSectionHeader(l10n.translate('recent_transactions').toUpperCase()),
+                        const SizedBox(height: 16),
+                        if (provider.expenses.isEmpty)
+                          _buildEmptyState(l10n)
+                        else
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: provider.expenses.length,
+                            itemBuilder: (context, index) {
+                              return ExpenseListItem(
+                                expense: provider.expenses[index],
+                                onDelete: () => provider.deleteExpense(provider.expenses[index].id),
+                              );
+                            },
+                          ),
+                        const SizedBox(height: 100),
+                      ],
+                    ),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
     );
   }
 
-  Widget _buildAppBar() {
+  Widget _buildSliverAppBar(AppLocalizations l10n) {
     return SliverAppBar(
-      expandedHeight: 140,
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      flexibleSpace: FlexibleSpaceBar(
-        background: Padding(
-          padding: const EdgeInsets.only(left: 20, right: 20, top: 60),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Hey, ${username ?? "there"}!', style: Theme.of(context).textTheme.displaySmall),
-                  Text('Check your finances today.', style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: AppColors.primary.withOpacity(0.1),
-                child: const Icon(Icons.person_outline, color: AppColors.primary),
-              ),
-            ],
-          ),
-        ),
-      ),
+      expandedHeight: 40,
+      backgroundColor: AppColors.getBackground(context),
+      title: Text(l10n.translate('dashboard')),
+      floating: true,
+      centerTitle: false,
     );
   }
 
-  Widget _buildEliteBudgetCard(ExpenseProvider provider) {
-    final budget = provider.budget?.monthlyLimit ?? 0;
-    final spent = provider.currentMonthSpent;
-    final remaining = budget - spent;
-    final progress = budget == 0 ? 0.0 : (spent / budget).clamp(0.0, 1.0);
-
+  Widget _buildBudgetCard(double spent, double balance, double progress, AppLocalizations l10n) {
     return CustomCard(
       gradient: AppColors.primaryGradient,
       padding: const EdgeInsets.all(AppColors.paddingLarge),
-      borderRadius: AppColors.borderRadiusLarge,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Text(l10n.translate('balance'), style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, letterSpacing: 1, fontSize: 12)),
+          const SizedBox(height: 8),
+          Text('₹${balance.toStringAsFixed(0)}', style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 32),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('MONTHLY BUDGET', 
-                style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
-              GestureDetector(
-                onTap: _showSetBudgetDialog,
-                child: const Icon(Icons.edit_outlined, color: Colors.white70, size: 20),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text('₹${budget.toStringAsFixed(0)}', style: Theme.of(context).textTheme.displayMedium?.copyWith(color: Colors.white)),
-          const SizedBox(height: 32),
-          Row(
-            children: [
-              _buildSummaryItem('Spent', '₹${spent.toStringAsFixed(0)}'),
-              const Spacer(),
-              _buildSummaryItem('Balance', '₹${remaining.clamp(0, double.infinity).toStringAsFixed(0)}', isHighlight: true),
+              _buildMetric(l10n.translate('spent'), '₹${spent.toStringAsFixed(0)}'),
+              _buildMetric(l10n.translate('total_budget'), '₹${(spent + balance).toStringAsFixed(0)}'),
             ],
           ),
           const SizedBox(height: 24),
-          _buildEliteProgressBar(progress),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: Colors.white.withOpacity(0.2),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSummaryItem(String label, String value, {bool isHighlight = false}) {
+  Widget _buildMetric(String label, String value) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text(label, style: const TextStyle(color: Colors.white60, fontSize: 10, fontWeight: FontWeight.bold)),
         const SizedBox(height: 4),
-        Text(value, style: TextStyle(
-          color: Colors.white, 
-          fontSize: 18, 
-          fontWeight: isHighlight ? FontWeight.w900 : FontWeight.w600,
-          letterSpacing: -0.5,
-        )),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
       ],
     );
   }
 
-  Widget _buildEliteProgressBar(double progress) {
-    return Column(
-      children: [
-        Container(
-          height: 8,
-          width: double.infinity,
-          decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(10)),
-          child: FractionallySizedBox(
-            alignment: Alignment.centerLeft,
-            widthFactor: progress,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: const [BoxShadow(color: Colors.white24, blurRadius: 8, offset: Offset(0, 2))],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  Widget _buildSectionHeader(String title) {
+    return Text(title, style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 2));
   }
 
-  Widget _buildSectionHeader(String title, VoidCallback onSeeAll) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.headlineMedium),
-        TextButton(onPressed: onSeeAll, child: const Text('See all')),
-      ],
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 60),
+  Widget _buildEmptyState(AppLocalizations l10n) {
+    return Center(
       child: Column(
         children: [
-          Icon(Icons.auto_graph_outlined, size: 64, color: AppColors.getTextTertiary(context).withOpacity(0.5)),
-          const SizedBox(height: 24),
-          Text('No transactions yet.', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 8),
-          Text('Your budget looks fresh!', style: Theme.of(context).textTheme.bodyMedium),
+          const SizedBox(height: 40),
+          Icon(Icons.receipt_long_outlined, size: 64, color: AppColors.getBorder(context)),
+          const SizedBox(height: 16),
+          Text(l10n.translate('empty_dashboard'), style: TextStyle(color: AppColors.getTextSecondary(context))),
         ],
       ),
     );

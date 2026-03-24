@@ -4,6 +4,7 @@ import 'add_expense_page.dart';
 import 'analytics_page.dart';
 import 'settings_page.dart';
 import '../constants/app_colors.dart';
+import '../l10n/app_localizations.dart';
 
 class MainPage extends StatefulWidget {
   const MainPage({super.key});
@@ -21,55 +22,42 @@ class _MainPageState extends State<MainPage> {
     const SettingsPage(),
   ];
 
-  void _onAddPressed() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddExpensePage(
-          onFinished: () => Navigator.pop(context),
-        ),
-        fullscreenDialog: true,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    
     return Scaffold(
       extendBody: true,
       backgroundColor: AppColors.getBackground(context),
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _pages,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _pages),
       floatingActionButton: FloatingActionButton(
-        onPressed: _onAddPressed,
+        onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AddExpensePage(onFinished: () => Navigator.pop(context)), fullscreenDialog: true)),
         backgroundColor: AppColors.primary,
         elevation: 10,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-        child: const Icon(Icons.add_rounded, size: 36, color: Colors.white),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: const Icon(Icons.add_rounded, size: 32, color: Colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: Container(
         padding: const EdgeInsets.only(top: 8),
         decoration: BoxDecoration(
           color: AppColors.getSurface(context),
-          boxShadow: [AppColors.softShadow(context)],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -4))],
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: BottomAppBar(
+          height: 64, // Compact height
           padding: EdgeInsets.zero,
-          notchMargin: 12,
+          notchMargin: 10,
           elevation: 0,
           color: Colors.transparent,
           shape: const CircularNotchedRectangle(),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(0, Icons.grid_view_rounded, 'Dashboard'),
-              _buildNavItem(1, Icons.auto_graph_rounded, 'Analytics'),
-              const SizedBox(width: 48), // Space for FAB
-              _buildNavItem(2, Icons.settings_rounded, 'Settings'),
+              _buildNavItem(0, Icons.grid_view_rounded, l10n.translate('dashboard')),
+              _buildNavItem(1, Icons.auto_graph_rounded, l10n.translate('analytics')),
+              const Spacer(flex: 2), // Space for FAB
+              _buildNavItem(2, Icons.settings_rounded, l10n.translate('settings')),
             ],
           ),
         ),
@@ -78,30 +66,23 @@ class _MainPageState extends State<MainPage> {
   }
 
   Widget _buildNavItem(int index, IconData icon, String label) {
-    bool isSelected = _currentIndex == index;
-    return InkWell(
-      onTap: () => setState(() => _currentIndex = index),
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+    bool isSelected = _currentIndex == (index > 1 ? index - 1 : index); 
+    // Wait, let's fix the indexing logic for 3 pages but 4 items in row.
+    // Index 0, 1, (Spacer), 2
+    
+    int pageIndex = index;
+    bool active = _currentIndex == pageIndex;
+
+    return Expanded(
+      child: InkWell(
+        onTap: () => setState(() => _currentIndex = pageIndex),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: isSelected ? AppColors.primary : AppColors.getTextTertiary(context).withOpacity(0.5),
-              size: 24,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontSize: 10,
-                color: isSelected ? AppColors.primary : AppColors.getTextTertiary(context).withOpacity(0.5),
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-              ),
-            ),
+            Icon(icon, color: active ? AppColors.primary : AppColors.getTextTertiary(context).withOpacity(0.4), size: 24),
+            const SizedBox(height: 2),
+            Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(fontSize: 10, color: active ? AppColors.primary : AppColors.getTextTertiary(context).withOpacity(0.4), fontWeight: active ? FontWeight.bold : FontWeight.w500)),
           ],
         ),
       ),

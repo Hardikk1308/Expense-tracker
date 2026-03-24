@@ -68,6 +68,7 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
                 decoration: const InputDecoration(hintText: 'name@example.com'),
               ),
 
@@ -78,6 +79,7 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
+                textCapitalization: TextCapitalization.none,
                 decoration: InputDecoration(
                   hintText: 'Enter your password',
                   suffixIcon: IconButton(

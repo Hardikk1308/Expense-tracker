@@ -4,6 +4,7 @@ import '../provider/expense_provider.dart';
 import '../constants/app_colors.dart';
 import '../models/category_model.dart';
 import '../widgets/custom_card.dart';
+import '../l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 class AddExpensePage extends StatefulWidget {
@@ -40,10 +41,7 @@ class _AddExpensePageState extends State<AddExpensePage> {
 
   void _submit() async {
     final amount = double.tryParse(_amountController.text) ?? 0;
-    if (amount <= 0 || _selectedCategory == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter valid data')));
-      return;
-    }
+    if (amount <= 0 || _selectedCategory == null) return;
 
     setState(() => _isLoading = true);
     final success = await context.read<ExpenseProvider>().addExpense(
@@ -55,16 +53,16 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
     setState(() => _isLoading = false);
 
-    if (success) {
-      if (widget.onFinished != null) widget.onFinished!(); else Navigator.pop(context);
-    }
+    if (success && widget.onFinished != null) widget.onFinished!();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
     return Scaffold(
       backgroundColor: AppColors.getBackground(context),
-      appBar: AppBar(title: const Text('Add Expense')),
+      appBar: AppBar(title: Text(l10n.translate('add_expense'))),
       body: Consumer<ExpenseProvider>(
         builder: (context, provider, child) {
           return SingleChildScrollView(
@@ -73,18 +71,22 @@ class _AddExpensePageState extends State<AddExpensePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildAmountInput(),
+                _buildAmountInput(l10n),
                 const SizedBox(height: 48),
-                _buildSectionLabel('WHAT IS IT FOR?'),
-                TextField(controller: _descriptionController, decoration: const InputDecoration(hintText: 'e.g. Dinner with friends')),
+                _buildSectionLabel(l10n.translate('description').toUpperCase()),
+                TextField(
+                  controller: _descriptionController,
+                  textCapitalization: TextCapitalization.sentences, // Proper casing
+                  decoration: const InputDecoration(hintText: 'e.g. Dinner with friends'),
+                ),
                 const SizedBox(height: 32),
-                _buildSectionLabel('SELECT CATEGORY'),
+                _buildSectionLabel(l10n.translate('category').toUpperCase()),
                 _buildCategoryGrid(provider.categories),
                 const SizedBox(height: 32),
-                _buildSectionLabel('TRANSACTION DATE'),
+                _buildSectionLabel(l10n.translate('date').toUpperCase()),
                 _buildDatePicker(),
                 const SizedBox(height: 48),
-                _buildSubmitButton(),
+                _buildSubmitButton(l10n),
               ],
             ),
           );
@@ -93,14 +95,15 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
   }
 
-  Widget _buildAmountInput() {
+  Widget _buildAmountInput(AppLocalizations l10n) {
     return Column(
       children: [
-        Text('AMOUNT', style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 2)),
+        Text(l10n.translate('amount').toUpperCase(), style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 2)),
         const SizedBox(height: 16),
         TextField(
           controller: _amountController,
           keyboardType: TextInputType.number,
+          textCapitalization: TextCapitalization.none, // No capitalization for numbers
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.displayLarge?.copyWith(fontSize: 56),
           decoration: const InputDecoration(prefixText: '₹ ', border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none, fillColor: Colors.transparent),
@@ -110,27 +113,18 @@ class _AddExpensePageState extends State<AddExpensePage> {
   }
 
   Widget _buildSectionLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Text(text, style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.5)),
-    );
+    return Padding(padding: const EdgeInsets.only(bottom: 12), child: Text(text, style: Theme.of(context).textTheme.labelSmall?.copyWith(letterSpacing: 1.5)));
   }
 
   Widget _buildCategoryGrid(List<Category> categories) {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 1.1,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3, childAspectRatio: 1.1, crossAxisSpacing: 12, mainAxisSpacing: 12),
       itemCount: categories.length,
       itemBuilder: (context, index) {
         final cat = categories[index];
         final isSelected = _selectedCategory?.id == cat.id;
-
         return GestureDetector(
           onTap: () => setState(() => _selectedCategory = cat),
           child: CustomCard(
@@ -166,13 +160,12 @@ class _AddExpensePageState extends State<AddExpensePage> {
     );
   }
 
-  Widget _buildSubmitButton() {
+  Widget _buildSubmitButton(AppLocalizations l10n) {
     return SizedBox(
-      width: double.infinity,
-      height: 60,
+      width: double.infinity, height: 60,
       child: ElevatedButton(
         onPressed: _isLoading ? null : _submit,
-        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Confirm Transaction'),
+        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text(l10n.translate('confirm')),
       ),
     );
   }

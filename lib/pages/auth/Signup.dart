@@ -73,6 +73,7 @@ class _SignupPageState extends State<SignupPage> {
               _buildLabel('FULL NAME'),
               TextField(
                 controller: _usernameController,
+                textCapitalization: TextCapitalization.words,
                 decoration: const InputDecoration(hintText: 'John Doe'),
               ),
 
@@ -83,6 +84,7 @@ class _SignupPageState extends State<SignupPage> {
               TextField(
                 controller: _emailController,
                 keyboardType: TextInputType.emailAddress,
+                textCapitalization: TextCapitalization.none,
                 decoration: const InputDecoration(hintText: 'name@example.com'),
               ),
 
@@ -93,6 +95,7 @@ class _SignupPageState extends State<SignupPage> {
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
+                textCapitalization: TextCapitalization.none,
                 decoration: InputDecoration(
                   hintText: 'Create a password',
                   suffixIcon: IconButton(

@@ -41,6 +41,11 @@ const setupDb = async () => {
           UNIQUE(user_id, month, year)
       );
     `);
+    // Ensure expenses table has category_id column
+    await pool.query(`
+      ALTER TABLE expenses 
+      ADD COLUMN IF NOT EXISTS category_id INTEGER REFERENCES categories(id) ON DELETE SET NULL;
+    `);
     console.log("Database schema updated.");
   } catch (err) {
     console.error("Failed to run migrations on startup", err);

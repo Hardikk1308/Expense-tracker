@@ -5,7 +5,6 @@ import '../constants/app_colors.dart';
 import '../models/expense_model.dart';
 import '../widgets/custom_card.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:intl/intl.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
@@ -76,13 +75,22 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         Expanded(
           child: CustomCard(
             color: AppColors.primary.withOpacity(0.05),
-            border: Border.all(color: AppColors.primary.withOpacity(0.2), width: 1),
+            border: Border.all(
+              color: AppColors.primary.withOpacity(0.2),
+              width: 1,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('MONTH TOTAL', style: Theme.of(context).textTheme.labelSmall),
+                Text(
+                  'MONTH TOTAL',
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
                 const SizedBox(height: 8),
-                Text('₹${total.toStringAsFixed(0)}', style: Theme.of(context).textTheme.displaySmall),
+                Text(
+                  '₹${total.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
               ],
             ),
           ),
@@ -93,9 +101,15 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('DAILY AVG', style: Theme.of(context).textTheme.labelSmall),
+                Text(
+                  'DAILY AVG',
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
                 const SizedBox(height: 8),
-                Text('₹${avg.toStringAsFixed(0)}', style: Theme.of(context).textTheme.displaySmall),
+                Text(
+                  '₹${avg.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.displaySmall,
+                ),
               ],
             ),
           ),
@@ -133,35 +147,51 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
-          maxY: (data.reduce((a, b) => a > b ? a : b) * 1.2).clamp(100, double.infinity),
-          barGroups: List.generate(7, (i) => BarChartGroupData(
-            x: i,
-            barRods: [
-              BarChartRodData(
-                toY: data[i],
-                color: AppColors.primary,
-                width: 12,
-                borderRadius: BorderRadius.circular(4),
-                backDrawRodData: BackgroundBarChartRodData(
-                  show: true, 
-                  toY: data.reduce((a, b) => a > b ? a : b) * 1.2, 
-                  color: AppColors.primary.withOpacity(0.05),
+          maxY: (data.reduce((a, b) => a > b ? a : b) * 1.2).clamp(
+            100,
+            double.infinity,
+          ),
+          barGroups: List.generate(
+            7,
+            (i) => BarChartGroupData(
+              x: i,
+              barRods: [
+                BarChartRodData(
+                  toY: data[i],
+                  color: AppColors.primary,
+                  width: 12,
+                  borderRadius: BorderRadius.circular(4),
+                  backDrawRodData: BackgroundBarChartRodData(
+                    show: true,
+                    toY: data.reduce((a, b) => a > b ? a : b) * 1.2,
+                    color: AppColors.primary.withOpacity(0.05),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          titlesData: FlTitlesData(
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (v, m) => Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Text(
+                    ['M', 'T', 'W', 'T', 'F', 'S', 'S'][v.toInt() % 7],
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
                 ),
               ),
-            ],
-          )),
-          titlesData: FlTitlesData(
-            bottomTitles: AxisTitles(sideTitles: SideTitles(
-              showTitles: true,
-              getTitlesWidget: (v, m) => Padding(
-                padding: const EdgeInsets.only(top: 8.0),
-                child: Text(['M','T','W','T','F','S','S'][v.toInt() % 7], 
-                  style: Theme.of(context).textTheme.labelSmall),
-              ),
-            )),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            ),
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: const FlGridData(show: false),
           borderData: FlBorderData(show: false),
@@ -199,7 +229,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             flex: 3,
             child: ListView(
               shrinkWrap: true,
-              children: totals.entries.map((e) => _buildLegendItem(e.key, e.value, total)).toList(),
+              children: totals.entries
+                  .map((e) => _buildLegendItem(e.key, e.value, total))
+                  .toList(),
             ),
           ),
         ],
@@ -212,19 +244,36 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         children: [
-          Container(width: 8, height: 8, decoration: BoxDecoration(color: _getCategoryColor(name), shape: BoxShape.circle)),
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              color: _getCategoryColor(name),
+              shape: BoxShape.circle,
+            ),
+          ),
           const SizedBox(width: 8),
-          Expanded(child: Text(name, style: Theme.of(context).textTheme.bodySmall, maxLines: 1)),
-          Text('${(value / total * 100).toInt()}%', style: Theme.of(context).textTheme.labelSmall),
+          Expanded(
+            child: Text(
+              name,
+              style: Theme.of(context).textTheme.bodySmall,
+              maxLines: 1,
+            ),
+          ),
+          Text(
+            '${(value / total * 100).toInt()}%',
+            style: Theme.of(context).textTheme.labelSmall,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildInsightsCard(Map<String, double> totals) {
-    final sorted = totals.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = totals.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     final highest = sorted.first;
-    
+
     return CustomCard(
       color: Colors.amber.withOpacity(0.05),
       border: Border.all(color: Colors.amber.withOpacity(0.2), width: 1),
@@ -236,10 +285,15 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Spending Insight', style: Theme.of(context).textTheme.titleSmall),
+                Text(
+                  'Spending Insight',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
                 const SizedBox(height: 4),
-                Text('You spent the most on "${highest.key}" this month. Consider tracking this more closely.', 
-                  style: Theme.of(context).textTheme.bodySmall),
+                Text(
+                  'You spent the most on "${highest.key}" this month. Consider tracking this more closely.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
               ],
             ),
           ),
@@ -250,7 +304,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
 
   Color _getCategoryColor(String name) {
     try {
-      final cat = context.read<ExpenseProvider>().categories.firstWhere((c) => c.name.toLowerCase() == name.toLowerCase());
+      final cat = context.read<ExpenseProvider>().categories.firstWhere(
+        (c) => c.name.toLowerCase() == name.toLowerCase(),
+      );
       return cat.color;
     } catch (_) {
       return Expense.getColorFromText(null, name);
@@ -262,9 +318,16 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.auto_awesome_mosaic_outlined, size: 80, color: AppColors.getBorder(context)),
+          Icon(
+            Icons.auto_awesome_mosaic_outlined,
+            size: 80,
+            color: AppColors.getBorder(context),
+          ),
           const SizedBox(height: 24),
-          Text('No data to analyze.', style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            'No data to analyze.',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
         ],
       ),
     );
