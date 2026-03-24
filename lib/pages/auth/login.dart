@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../services/auth_service.dart';
+import '../../constants/app_colors.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -66,9 +67,9 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,13 +82,13 @@ class _LoginPageState extends State<LoginPage> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: 8),
               const Text(
                 'Sign in to your account',
-                style: TextStyle(fontSize: 16, color: Colors.grey),
+                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
 
               const SizedBox(height: 60),
@@ -95,20 +96,25 @@ class _LoginPageState extends State<LoginPage> {
               // Email field
               TextField(
                 controller: _emailController,
+                style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Email',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
                   hintText: 'Enter your email',
+                  hintStyle: const TextStyle(color: AppColors.textTertiary),
+                  filled: true,
+                  fillColor: AppColors.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.deepPurple),
+                    borderSide: const BorderSide(color: AppColors.primary),
                   ),
                 ),
               ),
@@ -119,15 +125,20 @@ class _LoginPageState extends State<LoginPage> {
               TextField(
                 controller: _passwordController,
                 obscureText: !_isPasswordVisible,
+                style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Password',
+                  labelStyle: const TextStyle(color: AppColors.textSecondary),
                   hintText: 'Enter your password',
+                  hintStyle: const TextStyle(color: AppColors.textTertiary),
+                  filled: true,
+                  fillColor: AppColors.surface,
                   suffixIcon: IconButton(
                     icon: Icon(
                       _isPasswordVisible
                           ? Icons.visibility
                           : Icons.visibility_off,
-                      color: Colors.grey,
+                      color: AppColors.textTertiary,
                     ),
                     onPressed: () {
                       setState(() {
@@ -137,54 +148,20 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide.none,
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey.shade300),
+                    borderSide: BorderSide.none,
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Colors.deepPurple),
+                    borderSide: const BorderSide(color: AppColors.primary),
                   ),
                 ),
               ),
 
-              // const SizedBox(height: 40),
-
-              // // Debug test button
-              // SizedBox(
-              //   width: double.infinity,
-              //   height: 40,
-              //   child: OutlinedButton(
-              //     onPressed: () {
-              //       _emailController.text = 'test@example.com';
-              //       _passwordController.text = 'password123';
-              //       print('🧪 DEBUG: Test credentials filled');
-              //     },
-              //     child: const Text('Fill Test Credentials'),
-              //   ),
-              // ),
-
-              // const SizedBox(height: 20),
-
-              // // Debug Test Button (remove in production)
-              // SizedBox(
-              //   width: double.infinity,
-              //   height: 40,
-              //   child: OutlinedButton(
-              //     onPressed: () async {
-              //       print('🧪 DEBUG: Testing API connectivity...');
-              //       await DebugUtils.testApiConnectivity();
-              //       if (_emailController.text.isNotEmpty && _passwordController.text.isNotEmpty) {
-              //         await DebugUtils.testLoginEndpoint(_emailController.text.trim(), _passwordController.text);
-              //       }
-              //     },
-              //     child: const Text('🧪 Test API Connection'),
-              //   ),
-              // ),
-
-              const SizedBox(height: 20),
+              const SizedBox(height: 60),
 
               // Login button
               SizedBox(
@@ -193,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _handleLogin,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
+                    backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -219,7 +196,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
 
-              const Spacer(),
+              const SizedBox(height: 40),
 
               // Sign up link
               Row(
@@ -227,7 +204,7 @@ class _LoginPageState extends State<LoginPage> {
                 children: [
                   const Text(
                     "Don't have an account? ",
-                    style: TextStyle(color: Colors.grey),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                   GestureDetector(
                     onTap: () {
@@ -236,7 +213,7 @@ class _LoginPageState extends State<LoginPage> {
                     child: const Text(
                       'Sign Up',
                       style: TextStyle(
-                        color: Colors.deepPurple,
+                        color: AppColors.primaryLight,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
